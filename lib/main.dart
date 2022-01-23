@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:productive_cats/buddy.dart';
+import 'package:productive_cats/drawer.dart';
+import 'package:productive_cats/pages/buddy.dart';
+import 'package:productive_cats/pages/cat_collection.dart';
+import 'package:productive_cats/pages/leaderboard.dart';
 
-import 'package:productive_cats/login.dart';
+import 'package:productive_cats/pages/login.dart';
+import 'package:productive_cats/pages/market.dart';
+import 'package:productive_cats/pages/settings.dart';
+import 'package:productive_cats/pages/statistics.dart';
+import 'package:productive_cats/pages/trading.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,7 +17,6 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -18,11 +24,17 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LoginScreen(),
+      home: const LoginPage(),
       routes: {
-        // '/': (context) => SplashScreen(), // TODO: add splash screen
-        '/login': (context) => const LoginScreen(),
-        '/buddy': (context) => const ProductiveBuddyScreen(),
+        '/login': (context) => const LoginPage(),
+        '/buddy': (context) => const BuddyPage(),
+        '/collection': (context) => const CatCollectionPage(),
+        '/market': (context) => const MarketPage(),
+        '/trading': (context) => const TradingPage(),
+        '/statistics': (context) => const StatisticsPage(),
+        '/leaderboard': (context) => const LeaderboardPage(),
+        '/settings': (context) => const SettingsPage(),
+        '/logout': (context) => const LoginPage(),
       },
     );
   }
