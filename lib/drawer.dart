@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ProductiveCatsDrawer extends StatefulWidget {
   const ProductiveCatsDrawer(this._selected, {Key? key}) : super(key: key);
@@ -21,10 +22,12 @@ enum DrawerItems {
 }
 
 class _ProductiveCatsDrawerState extends State<ProductiveCatsDrawer> {
-  void Function() _onNavigateItem(String route) =>
-      ModalRoute.of(context)?.settings.name == route
-          ? () => Navigator.pop(context)
-          : () => Navigator.popAndPushNamed(context, route);
+  void Function() navigateRoute(String route) {
+    return () {
+      Navigator.pop(context); // close drawer
+      context.go(route);
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,37 +48,37 @@ class _ProductiveCatsDrawerState extends State<ProductiveCatsDrawer> {
                   leading: const Icon(Icons.home),
                   title: const Text('Productive Cats'),
                   selected: widget._selected == DrawerItems.buddy,
-                  onTap: _onNavigateItem('/buddy'),
+                  onTap: navigateRoute('/buddy'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.collections),
                   title: const Text('Your Cat Collection'),
                   selected: widget._selected == DrawerItems.collection,
-                  onTap: _onNavigateItem('/collection'),
+                  onTap: navigateRoute('/collection'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.shopping_cart),
                   title: const Text('Market'),
                   selected: widget._selected == DrawerItems.market,
-                  onTap: _onNavigateItem('/market'),
+                  onTap: navigateRoute('/market'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.price_change),
                   title: const Text('Trading'),
                   selected: widget._selected == DrawerItems.trading,
-                  onTap: _onNavigateItem('/trading'),
+                  onTap: navigateRoute('/trading'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.show_chart),
                   title: const Text('Statistics'),
                   selected: widget._selected == DrawerItems.statistics,
-                  onTap: _onNavigateItem('/statistics'),
+                  onTap: navigateRoute('/statistics'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.leaderboard),
                   title: const Text('Leaderboard'),
                   selected: widget._selected == DrawerItems.leaderboard,
-                  onTap: _onNavigateItem('/leaderboard'),
+                  onTap: navigateRoute('/leaderboard'),
                 ),
               ],
             ),
@@ -84,13 +87,13 @@ class _ProductiveCatsDrawerState extends State<ProductiveCatsDrawer> {
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
             selected: widget._selected == DrawerItems.settings,
-            onTap: _onNavigateItem('/settings'),
+            onTap: navigateRoute('/settings'),
           ),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
             selected: widget._selected == DrawerItems.logout,
-            onTap: _onNavigateItem('/login'),
+            onTap: navigateRoute('/login'),
           ),
         ],
       ),
