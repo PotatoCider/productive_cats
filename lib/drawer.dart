@@ -1,15 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class ProductiveCatsDrawer extends StatefulWidget {
-  const ProductiveCatsDrawer(this._selected, {Key? key}) : super(key: key);
-
-  final DrawerItems _selected;
-
-  @override
-  State<ProductiveCatsDrawer> createState() => _ProductiveCatsDrawerState();
-}
-
 enum DrawerItems {
   buddy,
   collection,
@@ -18,16 +9,21 @@ enum DrawerItems {
   statistics,
   leaderboard,
   settings,
-  logout
+  logout,
+  register,
 }
 
-class _ProductiveCatsDrawerState extends State<ProductiveCatsDrawer> {
-  void Function() navigateRoute(String route) {
+class ProductiveCatsDrawer extends StatelessWidget {
+  const ProductiveCatsDrawer(this._selected, {Key? key}) : super(key: key);
+
+  void Function() navigateRoute(BuildContext context, String route) {
     return () {
       Navigator.pop(context); // close drawer
       context.go(route);
     };
   }
+
+  final DrawerItems _selected;
 
   @override
   Widget build(BuildContext context) {
@@ -39,46 +35,44 @@ class _ProductiveCatsDrawerState extends State<ProductiveCatsDrawer> {
               padding: EdgeInsets.zero,
               children: [
                 const DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                  ),
+                  decoration: BoxDecoration(color: Colors.grey),
                   child: Text('Drawer Header'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.home),
                   title: const Text('Productive Cats'),
-                  selected: widget._selected == DrawerItems.buddy,
-                  onTap: navigateRoute('/buddy'),
+                  selected: _selected == DrawerItems.buddy,
+                  onTap: navigateRoute(context, '/buddy'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.collections),
                   title: const Text('Your Cat Collection'),
-                  selected: widget._selected == DrawerItems.collection,
-                  onTap: navigateRoute('/collection'),
+                  selected: _selected == DrawerItems.collection,
+                  onTap: navigateRoute(context, '/collection'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.shopping_cart),
                   title: const Text('Market'),
-                  selected: widget._selected == DrawerItems.market,
-                  onTap: navigateRoute('/market'),
+                  selected: _selected == DrawerItems.market,
+                  onTap: navigateRoute(context, '/market'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.price_change),
                   title: const Text('Trading'),
-                  selected: widget._selected == DrawerItems.trading,
-                  onTap: navigateRoute('/trading'),
+                  selected: _selected == DrawerItems.trading,
+                  onTap: navigateRoute(context, '/trading'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.show_chart),
                   title: const Text('Statistics'),
-                  selected: widget._selected == DrawerItems.statistics,
-                  onTap: navigateRoute('/statistics'),
+                  selected: _selected == DrawerItems.statistics,
+                  onTap: navigateRoute(context, '/statistics'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.leaderboard),
                   title: const Text('Leaderboard'),
-                  selected: widget._selected == DrawerItems.leaderboard,
-                  onTap: navigateRoute('/leaderboard'),
+                  selected: _selected == DrawerItems.leaderboard,
+                  onTap: navigateRoute(context, '/leaderboard'),
                 ),
               ],
             ),
@@ -86,14 +80,14 @@ class _ProductiveCatsDrawerState extends State<ProductiveCatsDrawer> {
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
-            selected: widget._selected == DrawerItems.settings,
-            onTap: navigateRoute('/settings'),
+            selected: _selected == DrawerItems.settings,
+            onTap: navigateRoute(context, '/settings'),
           ),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
-            selected: widget._selected == DrawerItems.logout,
-            onTap: navigateRoute('/login'),
+            selected: _selected == DrawerItems.logout,
+            onTap: navigateRoute(context, '/login'),
           ),
         ],
       ),

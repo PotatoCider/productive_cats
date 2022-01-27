@@ -16,7 +16,9 @@ class _BuddyPageState extends State<BuddyPage> {
         title: const Text('Your Buddy'),
       ),
       drawer: const ProductiveCatsDrawer(DrawerItems.buddy),
-      body: const Text('Your Buddy'), // TODO: implement your buddy
+      body: Center(
+        child: CircularProgressIndicator(),
+      ), // TODO: implement your buddy
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:productive_cats/pages/leaderboard.dart';
 
 import 'package:productive_cats/pages/login.dart';
 import 'package:productive_cats/pages/market.dart';
+import 'package:productive_cats/pages/register.dart';
 import 'package:productive_cats/pages/settings.dart';
 import 'package:productive_cats/pages/statistics.dart';
 import 'package:productive_cats/pages/trading.dart';
@@ -31,11 +32,15 @@ class MyApp extends StatelessWidget {
   }
 
   final _router = GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/buddy',
     routes: [
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterPage(),
       ),
       GoRoute(
         path: '/buddy',

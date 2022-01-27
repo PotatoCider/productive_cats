@@ -9,25 +9,27 @@ import 'package:productive_cats/utils/utils.dart';
 import 'package:productive_cats/widgets/heading.dart';
 import 'package:productive_cats/widgets/login_field.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({Key? key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _LoginPageState();
+  State<StatefulWidget> createState() => _RegisterPageState();
 }
 
 // TODO:
 // - add forgot password
 // - add show password (visible)
+// - add email verification
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  final passwordFocus = FocusNode();
 
+  String _username = '';
   String _email = '';
   String _password = '';
+  String _name = '';
 
-  void _onLogin(bool google) async {
+  void _onRegister(bool google) async {
     _formKey.currentState!.save();
     if (!google && !_formKey.currentState!.validate()) return;
 
@@ -37,16 +39,18 @@ class _LoginPageState extends State<LoginPage> {
           provider: 'google',
         );
       } else {
-        await Appwrite.account.createSession(
+        await Appwrite.account.create(
+          userId: _username,
           email: _email,
           password: _password,
+          name: _name.isEmpty ? _username : _name,
         );
       }
-      Utils.showSnackBar(context, 'Login successful');
+      Utils.showSnackBar(context, 'Register successful');
     } on AppwriteException catch (error) {
       String msg = error.message ?? 'Unknown Error';
       if (msg == 'Too many requests') {
-        msg = "Too many login attempts. Try again later.";
+        msg = "Too many register attempts. Try again later.";
       }
       Utils.showSnackBar(context, msg);
     } on PlatformException catch (error) {
@@ -58,9 +62,9 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text('Register'),
       ),
-      drawer: const ProductiveCatsDrawer(DrawerItems.logout),
+      drawer: const ProductiveCatsDrawer(DrawerItems.register),
       body: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Form(
@@ -70,24 +74,8 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               const SizedBox.square(dimension: 32),
               const Heading('Productive Cats'),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Image.asset(
-                  'images/icon.png',
-                  height: 160,
-                  width: 160,
-                ),
-              ),
-              // Container(
-              //   alignment: Alignment.center,
-              //   padding: const EdgeInsets.all(8),
-              //   child: Text(_errorMsg,
-              //       style: const TextStyle(
-              //         color: Colors.red,
-              //       )),
-              // ),
               LoginFormField(
-                'Email', // TODO: allow username login too
+                'Email',
                 validator: (value) {
                   if (!Utils.isValidEmail(value)) {
                     return 'Invalid Email';
@@ -97,22 +85,73 @@ class _LoginPageState extends State<LoginPage> {
                 onSaved: (value) => _email = value ?? '',
               ),
               LoginFormField(
+                'Name',
+                optional: true,
+                validator: (value) {
+                  if (value.length > 36) {
+                    return 'Max 36 chars';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _name = value ?? '',
+              ),
+              LoginFormField(
+                'Username',
+                validator: (value) {
+                  if (value.length > 36) {
+                    return 'Max 36 chars';
+                  }
+                  if (!Appwrite.isValidID(value)) {
+                    return 'Invalid username';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _username = value ?? '',
+              ),
+              LoginFormField(
                 'Password',
                 obscureText: true,
                 validator: (value) {
-                  if (value.length < 8) {
-                    return 'Password must be at least 8 characters';
+                  if (value.length < 8 || value.length > 64) {
+                    return 'Only 8-64 chars';
                   }
                   return null;
                 },
                 onSaved: (value) => _password = value ?? '',
               ),
+              LoginFormField(
+                'Confirm Password',
+                obscureText: true,
+                validator: (value) {
+                  if (value != _password) {
+                    return 'Password does not match';
+                  }
+                  return null;
+                },
+              ),
+              // if (_errorMsg.isNotEmpty)
+              //   Container(
+              //     alignment: Alignment.center,
+              //     padding: const EdgeInsets.all(16),
+              //     child: Text(
+              //       _errorMsg,
+              //       style: const TextStyle(color: Colors.red),
+              //     ),
+              //   ),
               Padding(
                 padding:
                     const EdgeInsets.symmetric(vertical: 8, horizontal: 32),
                 child: ElevatedButton(
-                  onPressed: () => _onLogin(false),
-                  child: const Text('LOGIN'),
+                  onPressed: () => _onRegister(false),
+                  onLongPress: () async {
+                    try {
+                      User user = await Appwrite.account.get();
+                      debugPrint(user.toString());
+                    } on AppwriteException catch (error) {
+                      debugPrint(error.toString());
+                    }
+                  },
+                  child: const Text('REGISTER'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.all(16),
                   ),
@@ -125,14 +164,14 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     ElevatedButton(
-                      onPressed: () => context.go('/register'),
-                      child: const Text('NEW USER?'),
+                      onPressed: () => context.go('/login'),
+                      child: const Text('OLD USER?'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.all(16),
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () => _onLogin(true),
+                      onPressed: () => _onRegister(true),
                       child: Row(
                         children: [
                           Image.asset(
@@ -140,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                             height: 24,
                           ),
                           const SizedBox.square(dimension: 8),
-                          const Text('SIGN IN'),
+                          const Text('SIGN UP'),
                         ],
                       ),
                       style: ElevatedButton.styleFrom(
