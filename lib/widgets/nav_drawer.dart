@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:productive_cats/providers/user_info.dart';
+import 'package:provider/provider.dart';
 
 enum DrawerItems {
+  none,
   buddy,
   collection,
   market,
@@ -13,8 +16,8 @@ enum DrawerItems {
   register,
 }
 
-class ProductiveCatsDrawer extends StatelessWidget {
-  const ProductiveCatsDrawer(this._selected, {Key? key}) : super(key: key);
+class NavigationDrawer extends StatelessWidget {
+  const NavigationDrawer(this._selected, {Key? key}) : super(key: key);
 
   void Function() navigateRoute(BuildContext context, String route) {
     return () {
@@ -86,8 +89,8 @@ class ProductiveCatsDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
-            selected: _selected == DrawerItems.logout,
-            onTap: navigateRoute(context, '/login'),
+            // selected: _selected == DrawerItems.logout,
+            onTap: () => context.read<UserInfo>().logout(),
           ),
         ],
       ),

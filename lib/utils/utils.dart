@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 class Utils {
@@ -6,8 +8,14 @@ class Utils {
       .hasMatch(email);
 
   static void showSnackBar(BuildContext context, String text) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-        content: Text(text),
-      ));
+      WidgetsBinding.instance!.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+          content: Text(text),
+        ));
+      });
+
+  static void log(Object? obj) => debugPrint(inspect(obj).toString());
+  static void logNamed(String info, Object? obj) =>
+      debugPrint('$info: ${inspect(obj).toString()}');
 }

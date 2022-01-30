@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:productive_cats/drawer.dart';
+import 'package:productive_cats/widgets/nav_drawer.dart';
 
-class StatisticsPage extends StatefulWidget {
+class StatisticsPage extends StatelessWidget {
   const StatisticsPage({Key? key}) : super(key: key);
 
-  @override
-  _StatisticsPageState createState() => _StatisticsPageState();
-}
-
-class _StatisticsPageState extends State<StatisticsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Statistics'),
       ),
-      drawer: const ProductiveCatsDrawer(DrawerItems.statistics),
+      drawer: const NavigationDrawer(DrawerItems.statistics),
       body: const Text('Statistics'), // TODO: implement Statistics
     );
   }

@@ -1,13 +1,15 @@
 import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:productive_cats/api/appwrite.dart';
-import 'package:productive_cats/drawer.dart';
+import 'package:productive_cats/providers/user_info.dart';
+import 'package:productive_cats/utils/appwrite.dart';
+import 'package:productive_cats/widgets/buttons.dart';
+import 'package:productive_cats/widgets/nav_drawer.dart';
 import 'package:productive_cats/utils/utils.dart';
 import 'package:productive_cats/widgets/heading.dart';
 import 'package:productive_cats/widgets/login_field.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -22,7 +24,6 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final passwordFocus = FocusNode();
 
   String _email = '';
   String _password = '';
@@ -33,16 +34,18 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       if (google) {
-        await Appwrite.account.createOAuth2Session(
-          provider: 'google',
-        );
+        await Appwrite.account.createOAuth2Session(provider: 'google');
       } else {
         await Appwrite.account.createSession(
           email: _email,
           password: _password,
         );
       }
-      Utils.showSnackBar(context, 'Login successful');
+      UserInfo user = context.read<UserInfo>();
+      await user.fetch(); // fetch session
+      if (!user.registerGoogle) {
+        Utils.showSnackBar(context, 'Login successful');
+      }
     } on AppwriteException catch (error) {
       String msg = error.message ?? 'Unknown Error';
       if (msg == 'Too many requests') {
@@ -60,97 +63,68 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(
         title: const Text('Login'),
       ),
-      drawer: const ProductiveCatsDrawer(DrawerItems.logout),
+      drawer: const NavigationDrawer(DrawerItems.none),
       body: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox.square(dimension: 32),
-              const Heading('Productive Cats'),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Image.asset(
-                  'images/icon.png',
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 32),
+                const Heading('Productive Cats'),
+                const SizedBox(height: 16),
+                Image.asset(
+                  'images/icon.jpg',
                   height: 160,
                   width: 160,
+                  color: Theme.of(context).backgroundColor,
                 ),
-              ),
-              // Container(
-              //   alignment: Alignment.center,
-              //   padding: const EdgeInsets.all(8),
-              //   child: Text(_errorMsg,
-              //       style: const TextStyle(
-              //         color: Colors.red,
-              //       )),
-              // ),
-              LoginFormField(
-                'Email', // TODO: allow username login too
-                validator: (value) {
-                  if (!Utils.isValidEmail(value)) {
-                    return 'Invalid Email';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _email = value ?? '',
-              ),
-              LoginFormField(
-                'Password',
-                obscureText: true,
-                validator: (value) {
-                  if (value.length < 8) {
-                    return 'Password must be at least 8 characters';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _password = value ?? '',
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 32),
-                child: ElevatedButton(
+                const SizedBox(height: 24),
+                LoginFormField(
+                  'Email', // TODO: allow username login too
+                  validator: (value) {
+                    if (!Utils.isValidEmail(value)) {
+                      return 'Invalid Email';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _email = value ?? '',
+                ),
+                LoginFormField(
+                  'Password',
+                  obscureText: true,
+                  validator: (value) {
+                    if (value.length < 8) {
+                      return 'Password must be at least 8 characters';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _password = value ?? '',
+                ),
+                const SizedBox(height: 16),
+                PaddedButton(
                   onPressed: () => _onLogin(false),
                   child: const Text('LOGIN'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
-                  ),
                 ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 32),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    ElevatedButton(
+                    PaddedButton(
                       onPressed: () => context.go('/register'),
                       child: const Text('NEW USER?'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.all(16),
-                      ),
                     ),
-                    ElevatedButton(
+                    GoogleButton(
+                      'SIGN IN',
                       onPressed: () => _onLogin(true),
-                      child: Row(
-                        children: [
-                          Image.asset(
-                            'images/google.png',
-                            height: 24,
-                          ),
-                          const SizedBox.square(dimension: 8),
-                          const Text('SIGN IN'),
-                        ],
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.all(16),
-                      ),
                     ),
                   ],
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),

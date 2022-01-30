@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class LoginFormField extends StatelessWidget {
   const LoginFormField(
     this.name, {
-    this.padding = const EdgeInsets.symmetric(vertical: 8, horizontal: 32),
+    this.padding = const EdgeInsets.symmetric(vertical: 8),
     this.validator,
     this.onSaved,
     this.optional = false,
     this.obscureText = false,
+    this.initialValue,
+    this.enabled = true,
     Key? key,
   }) : super(key: key);
 
@@ -17,6 +19,8 @@ class LoginFormField extends StatelessWidget {
   final void Function(String?)? onSaved;
   final bool optional;
   final bool obscureText;
+  final String? initialValue;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +34,8 @@ class LoginFormField extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w500),
           ),
           TextFormField(
+            enabled: enabled,
+            initialValue: initialValue,
             obscureText: obscureText,
             decoration: InputDecoration(
                 border: const OutlineInputBorder(),

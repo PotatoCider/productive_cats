@@ -3,11 +3,15 @@ import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:productive_cats/api/appwrite.dart';
-import 'package:productive_cats/drawer.dart';
+import 'package:productive_cats/providers/user_info.dart';
+import 'package:productive_cats/utils/appwrite.dart';
+import 'package:productive_cats/widgets/buttons.dart';
+import 'package:productive_cats/widgets/nav_drawer.dart';
 import 'package:productive_cats/utils/utils.dart';
 import 'package:productive_cats/widgets/heading.dart';
 import 'package:productive_cats/widgets/login_field.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -29,26 +33,51 @@ class _RegisterPageState extends State<RegisterPage> {
   String _password = '';
   String _name = '';
 
-  void _onRegister(bool google) async {
+  void _onRegister(bool googleSignUp) async {
     _formKey.currentState!.save();
-    if (!google && !_formKey.currentState!.validate()) return;
+    if (!googleSignUp && !_formKey.currentState!.validate()) return;
 
+    UserInfo user = context.read<UserInfo>();
     try {
-      if (google) {
-        await Appwrite.account.createOAuth2Session(
-          provider: 'google',
-        );
+      // if a user registers using google, we also need the user to enter a
+      // new username and password, hence google login is a two-step process
+      // where the 2nd step is when user.registerGoogle == true
+      if (googleSignUp) {
+        await Appwrite.account.createOAuth2Session(provider: 'google');
+        await user.fetch(); // fetch session
       } else {
-        await Appwrite.account.create(
-          userId: _username,
-          email: _email,
-          password: _password,
-          name: _name.isEmpty ? _username : _name,
+        if (user.registerGoogle) {
+          if (_name.isNotEmpty) await Appwrite.account.updateName(name: _name);
+          await Appwrite.account.updatePassword(password: _password);
+        } else {
+          await Appwrite.account.create(
+            userId: 'unique()',
+            email: _email,
+            password: _password,
+            name: _name.isEmpty ? _username : _name,
+          );
+          await Appwrite.account.createSession(
+            email: _email,
+            password: _password,
+          );
+        }
+        await user.fetch();
+
+        Appwrite.database.createDocument(
+          collectionId: Appwrite.dbUsersID, // users
+          documentId: 'unique()',
+          data: <String, dynamic>{
+            'id': user.user!.$id,
+            'email': _email,
+            'username': _username,
+            'name': _name,
+            'coins': 100,
+          },
         );
+        Utils.showSnackBar(context, 'Register successful');
       }
-      Utils.showSnackBar(context, 'Register successful');
     } on AppwriteException catch (error) {
-      String msg = error.message ?? 'Unknown Error';
+      var msg = error.message ?? 'Unknown Error';
       if (msg == 'Too many requests') {
         msg = "Too many register attempts. Try again later.";
       }
@@ -60,136 +89,121 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserInfo>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Register'),
       ),
-      drawer: const ProductiveCatsDrawer(DrawerItems.register),
+      drawer: const NavigationDrawer(DrawerItems.register),
       body: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox.square(dimension: 32),
-              const Heading('Productive Cats'),
-              LoginFormField(
-                'Email',
-                validator: (value) {
-                  if (!Utils.isValidEmail(value)) {
-                    return 'Invalid Email';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _email = value ?? '',
-              ),
-              LoginFormField(
-                'Name',
-                optional: true,
-                validator: (value) {
-                  if (value.length > 36) {
-                    return 'Max 36 chars';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _name = value ?? '',
-              ),
-              LoginFormField(
-                'Username',
-                validator: (value) {
-                  if (value.length > 36) {
-                    return 'Max 36 chars';
-                  }
-                  if (!Appwrite.isValidID(value)) {
-                    return 'Invalid username';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _username = value ?? '',
-              ),
-              LoginFormField(
-                'Password',
-                obscureText: true,
-                validator: (value) {
-                  if (value.length < 8 || value.length > 64) {
-                    return 'Only 8-64 chars';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _password = value ?? '',
-              ),
-              LoginFormField(
-                'Confirm Password',
-                obscureText: true,
-                validator: (value) {
-                  if (value != _password) {
-                    return 'Password does not match';
-                  }
-                  return null;
-                },
-              ),
-              // if (_errorMsg.isNotEmpty)
-              //   Container(
-              //     alignment: Alignment.center,
-              //     padding: const EdgeInsets.all(16),
-              //     child: Text(
-              //       _errorMsg,
-              //       style: const TextStyle(color: Colors.red),
-              //     ),
-              //   ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 32),
-                child: ElevatedButton(
-                  onPressed: () => _onRegister(false),
-                  onLongPress: () async {
-                    try {
-                      User user = await Appwrite.account.get();
-                      debugPrint(user.toString());
-                    } on AppwriteException catch (error) {
-                      debugPrint(error.toString());
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 32),
+                const Heading('Productive Cats'),
+                const SizedBox(height: 8),
+                if (user.registerGoogle)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: Theme.of(context).dialogBackgroundColor,
+                    ),
+                    child: Text(
+                      'Please enter your Username and Password '
+                      'to complete registration.',
+                      style: TextStyle(color: Theme.of(context).indicatorColor),
+                    ),
+                  ),
+                LoginFormField(
+                  'Email',
+                  validator: (value) {
+                    if (!Utils.isValidEmail(value)) {
+                      return 'Invalid Email';
                     }
+                    return null;
                   },
+                  onSaved: (value) => _email = value ?? '',
+                  initialValue: user.user?.email ?? '',
+                  enabled: !user.registerGoogle,
+                ),
+                LoginFormField(
+                  'Name',
+                  optional: true,
+                  validator: (value) {
+                    if (value.length > 36) {
+                      return 'Max 36 chars';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _name = value ?? '',
+                  initialValue: user.user?.name ?? '',
+                  enabled: !user.registerGoogle,
+                ),
+                LoginFormField(
+                  'Username',
+                  validator: (value) {
+                    if (value.length > 36) {
+                      return 'Max 36 chars';
+                    }
+                    if (!Appwrite.isValidID(value)) {
+                      return 'Invalid username';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _username = value ?? '',
+                ),
+                LoginFormField(
+                  'New Password',
+                  obscureText: true,
+                  validator: (value) {
+                    if (value.length < 8 || value.length > 64) {
+                      return 'Only 8-64 chars';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _password = value ?? '',
+                ),
+                LoginFormField(
+                  'Confirm Password',
+                  obscureText: true,
+                  validator: (value) {
+                    if (value != _password) {
+                      return 'Password does not match';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () => _onRegister(false),
                   child: const Text('REGISTER'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.all(16),
                   ),
                 ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 32),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => context.go('/login'),
-                      child: const Text('OLD USER?'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.all(16),
+                const SizedBox(height: 16),
+                if (!user.registerGoogle)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      PaddedButton(
+                        child: const Text('OLD USER?'),
+                        onPressed: () => context.go('/login'),
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _onRegister(true),
-                      child: Row(
-                        children: [
-                          Image.asset(
-                            'images/google.png',
-                            height: 24,
-                          ),
-                          const SizedBox.square(dimension: 8),
-                          const Text('SIGN UP'),
-                        ],
+                      GoogleButton(
+                        'SIGN UP',
+                        onPressed: () => _onRegister(true),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.all(16),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            ],
+                    ],
+                  )
+              ],
+            ),
           ),
         ),
       ),

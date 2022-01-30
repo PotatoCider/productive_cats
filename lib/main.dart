@@ -1,6 +1,8 @@
+import 'package:app_usage/app_usage.dart';
+import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_config/flutter_config.dart';
 import 'package:go_router/go_router.dart';
-import 'package:productive_cats/drawer.dart';
 import 'package:productive_cats/pages/buddy.dart';
 import 'package:productive_cats/pages/cat_collection.dart';
 import 'package:productive_cats/pages/leaderboard.dart';
@@ -11,28 +13,66 @@ import 'package:productive_cats/pages/register.dart';
 import 'package:productive_cats/pages/settings.dart';
 import 'package:productive_cats/pages/statistics.dart';
 import 'package:productive_cats/pages/trading.dart';
+import 'package:productive_cats/providers/coins.dart';
+import 'package:productive_cats/providers/user_info.dart';
+import 'package:productive_cats/utils/appwrite.dart';
+import 'package:productive_cats/utils/utils.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Required by FlutterConfig
+  await FlutterConfig.loadEnvVariables();
+  Appwrite.init();
+
+  runApp(App());
 }
 
-class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
+class App extends StatelessWidget {
+  App({Key? key})
+      : user = UserInfo(),
+        super(key: key);
+
+  final UserInfo user;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Productive Cats',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    user.fetch();
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: user),
+        ChangeNotifierProvider(create: (_) => Coins()),
+      ],
+      child: MaterialApp.router(
+        title: 'Productive Cats',
+        theme: ThemeData(
+          primarySwatch: Colors.indigo,
+          brightness: Brightness.light,
+        ),
+        darkTheme: ThemeData(
+          primarySwatch: Colors.indigo,
+          brightness: Brightness.dark,
+        ),
+        routeInformationParser: _router.routeInformationParser,
+        routerDelegate: _router.routerDelegate,
       ),
-      routeInformationParser: _router.routeInformationParser,
-      routerDelegate: _router.routerDelegate,
     );
   }
 
-  final _router = GoRouter(
+  late final _router = GoRouter(
     initialLocation: '/buddy',
+    refreshListenable: user,
+    redirect: (state) {
+      if (user.loading) return null;
+      var isLoginScreen =
+          (state.location == '/login' || state.location == '/register');
+      if (isLoginScreen && user.loggedIn) return '/buddy';
+      if (!isLoginScreen && !user.loggedIn) return '/login';
+      if (state.location != '/register' && user.registerGoogle) {
+        return '/register';
+      }
+
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/login',

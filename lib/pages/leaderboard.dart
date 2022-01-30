@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:productive_cats/drawer.dart';
+import 'package:productive_cats/widgets/nav_drawer.dart';
 
-class LeaderboardPage extends StatefulWidget {
+class LeaderboardPage extends StatelessWidget {
   const LeaderboardPage({Key? key}) : super(key: key);
 
-  @override
-  _LeaderboardPageState createState() => _LeaderboardPageState();
-}
-
-class _LeaderboardPageState extends State<LeaderboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Leaderboard'),
       ),
-      drawer: const ProductiveCatsDrawer(DrawerItems.leaderboard),
+      drawer: const NavigationDrawer(DrawerItems.leaderboard),
       body: const Text('Leaderboard'), // TODO: implement leaderboard
     );
   }

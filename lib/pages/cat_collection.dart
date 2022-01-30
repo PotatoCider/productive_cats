@@ -1,21 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:productive_cats/drawer.dart';
+import 'package:productive_cats/widgets/nav_drawer.dart';
+import 'package:productive_cats/widgets/coin_display.dart';
 
-class CatCollectionPage extends StatefulWidget {
+class CatCollectionPage extends StatelessWidget {
   const CatCollectionPage({Key? key}) : super(key: key);
 
-  @override
-  _CatCollectionPageState createState() => _CatCollectionPageState();
-}
-
-class _CatCollectionPageState extends State<CatCollectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cat Collection'),
+        title: const TitleWithCoinDisplay('Cat Collection'),
       ),
-      drawer: const ProductiveCatsDrawer(DrawerItems.collection),
+      drawer: const NavigationDrawer(DrawerItems.collection),
       body: const Text('Cat Collection'), // TODO: implement Cat Collection
     );
   }
