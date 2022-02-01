@@ -12,7 +12,30 @@ class CatCollectionPage extends StatelessWidget {
         title: const TitleWithCoinDisplay('Cat Collection'),
       ),
       drawer: const NavigationDrawer(DrawerItems.collection),
-      body: const Text('Cat Collection'), // TODO: implement Cat Collection
+      body: GridView.count(
+        crossAxisCount: 2,
+        padding: const EdgeInsets.all(16),
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        children: [
+          ...List.generate(
+            8,
+            (index) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Mr Fluff'),
+                const SizedBox(height: 4),
+                const Flexible(child: const Placeholder()),
+                Row(
+                  children: const [
+                    Text('LVL 90'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ), // TODO: implement Cat Collection
     );
   }
 }

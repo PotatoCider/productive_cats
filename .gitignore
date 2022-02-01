@@ -8,7 +8,13 @@
 .buildlog/
 .history
 .svn/
+
+# Secrets
 .env
+
+# Node related
+cloud_functions/*.tar.gz
+cloud_functions/*/node_modules
 
 # IntelliJ related
 *.iml

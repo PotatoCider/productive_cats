@@ -15,6 +15,10 @@ class Utils {
         ));
       });
 
+  static String capsFirst(String text) => text.isEmpty
+      ? ''
+      : text.characters.first.toUpperCase() + text.substring(1);
+
   static void log(Object? obj) => debugPrint(inspect(obj).toString());
   static void logNamed(String info, Object? obj) =>
       debugPrint('$info: ${inspect(obj).toString()}');

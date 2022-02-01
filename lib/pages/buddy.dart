@@ -16,20 +16,33 @@ class BuddyPage extends StatelessWidget {
         title: const TitleWithCoinDisplay('Your Buddy'),
       ),
       drawer: const NavigationDrawer(DrawerItems.buddy),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(64),
         child: Column(
           children: [
-            ElevatedButton(
-              onPressed: () => context.read<Coins>().increment(),
-              child: const Text('Increment'),
+            const Text(
+              'Mr Marshmallow',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 28,
+              ),
             ),
-            Consumer2<UserInfo, Coins>(
-              builder: (context, user, coins, child) {
-                if (user.loading) return const CircularProgressIndicator();
-                if (!user.loggedIn) return const SizedBox.shrink();
-                return Text(
-                    'Logined as ${user.user!.name}, Coins: ${coins.value}');
-              },
+            const SizedBox(height: 16),
+            const Placeholder(
+              fallbackHeight: 256,
+              fallbackWidth: 256,
+            ),
+            const SizedBox(height: 32),
+            Column(
+              children: [
+                Text(
+                  'Happiness',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             )
           ],
         ),

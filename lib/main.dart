@@ -1,5 +1,3 @@
-import 'package:app_usage/app_usage.dart';
-import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_config/flutter_config.dart';
 import 'package:go_router/go_router.dart';
@@ -8,21 +6,23 @@ import 'package:productive_cats/pages/cat_collection.dart';
 import 'package:productive_cats/pages/leaderboard.dart';
 
 import 'package:productive_cats/pages/login.dart';
-import 'package:productive_cats/pages/market.dart';
+import 'package:productive_cats/pages/cat_box.dart';
 import 'package:productive_cats/pages/register.dart';
 import 'package:productive_cats/pages/settings.dart';
-import 'package:productive_cats/pages/statistics.dart';
+import 'package:productive_cats/pages/app_usage.dart';
 import 'package:productive_cats/pages/trading.dart';
+import 'package:productive_cats/providers/app_usages.dart';
 import 'package:productive_cats/providers/coins.dart';
 import 'package:productive_cats/providers/user_info.dart';
 import 'package:productive_cats/utils/appwrite.dart';
-import 'package:productive_cats/utils/utils.dart';
 import 'package:provider/provider.dart';
+import 'package:wakelock/wakelock.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Required by FlutterConfig
   await FlutterConfig.loadEnvVariables();
   Appwrite.init();
+  Wakelock.enable();
 
   runApp(App());
 }
@@ -41,6 +41,7 @@ class App extends StatelessWidget {
       providers: [
         ChangeNotifierProvider.value(value: user),
         ChangeNotifierProvider(create: (_) => Coins()),
+        ChangeNotifierProvider(create: (_) => AppUsages(), lazy: false),
       ],
       child: MaterialApp.router(
         title: 'Productive Cats',
@@ -59,7 +60,7 @@ class App extends StatelessWidget {
   }
 
   late final _router = GoRouter(
-    initialLocation: '/buddy',
+    initialLocation: '/appusage',
     refreshListenable: user,
     redirect: (state) {
       if (user.loading) return null;
@@ -91,16 +92,16 @@ class App extends StatelessWidget {
         builder: (context, state) => const CatCollectionPage(),
       ),
       GoRoute(
-        path: '/market',
-        builder: (context, state) => const MarketPage(),
+        path: '/catbox',
+        builder: (context, state) => const CatBoxPage(),
       ),
       GoRoute(
         path: '/trading',
         builder: (context, state) => const TradingPage(),
       ),
       GoRoute(
-        path: '/statistics',
-        builder: (context, state) => const StatisticsPage(),
+        path: '/appusage',
+        builder: (context, state) => const AppUsagePage(),
       ),
       GoRoute(
         path: '/leaderboard',

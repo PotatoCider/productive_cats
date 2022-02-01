@@ -67,7 +67,7 @@ class _RegisterPageState extends State<RegisterPage> {
           collectionId: Appwrite.dbUsersID, // users
           documentId: 'unique()',
           data: <String, dynamic>{
-            'id': user.user!.$id,
+            'user_id': user.user!.$id,
             'email': _email,
             'username': _username,
             'name': _name,
