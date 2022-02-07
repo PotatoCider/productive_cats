@@ -6,11 +6,12 @@
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
    <application
-        android:label="productive_cats"
+        android:label="Productive Cats"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -33,7 +34,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.linusu.flutter_web_auth.CallbackActivity" >
+        <activity android:name="com.linusu.flutter_web_auth.CallbackActivity" android:exported="true">
         <intent-filter android:label="flutter_web_auth">
             <action android:name="android.intent.action.VIEW" />
             <category android:name="android.intent.category.DEFAULT" />

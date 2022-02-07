@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 
@@ -22,4 +23,7 @@ class Utils {
   static void log(Object? obj) => debugPrint(inspect(obj).toString());
   static void logNamed(String info, Object? obj) =>
       debugPrint('$info: ${inspect(obj).toString()}');
+
+  // note: end exclusive
+  static int randomInt(int min, int max) => Random().nextInt(max - min) + min;
 }

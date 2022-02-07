@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:productive_cats/providers/user_info.dart';
 import 'package:productive_cats/utils/appwrite.dart';
-import 'package:productive_cats/widgets/buttons.dart';
+import 'package:productive_cats/widgets/format_text.dart';
+import 'package:productive_cats/widgets/hero_material.dart';
+import 'package:productive_cats/widgets/login_buttons.dart';
 import 'package:productive_cats/widgets/nav_drawer.dart';
 import 'package:productive_cats/utils/utils.dart';
 import 'package:productive_cats/widgets/heading.dart';
@@ -42,7 +44,10 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
       UserInfo user = context.read<UserInfo>();
+
+      await Future<void>.delayed(const Duration(seconds: 1));
       await user.fetch(); // fetch session
+
       if (!user.registerGoogle) {
         Utils.showSnackBar(context, 'Login successful');
       }
@@ -61,9 +66,10 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: const SizedBox.shrink(),
         title: const Text('Login'),
       ),
-      drawer: const NavigationDrawer(DrawerItems.none),
+      // drawer: const NavigationDrawer(DrawerItems.none),
       body: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Form(
@@ -71,16 +77,16 @@ class _LoginPageState extends State<LoginPage> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 32),
-                const Heading('Productive Cats'),
+                const FormatText('Productive Cats',
+                    size: 32, bold: true, center: true, hero: true),
                 const SizedBox(height: 16),
                 Image.asset(
-                  'images/icon.jpg',
+                  'images/icon.png',
                   height: 160,
                   width: 160,
-                  color: Theme.of(context).backgroundColor,
+                  color: Theme.of(context).primaryColor,
                 ),
                 const SizedBox(height: 24),
                 LoginFormField(
@@ -92,6 +98,7 @@ class _LoginPageState extends State<LoginPage> {
                     return null;
                   },
                   onSaved: (value) => _email = value ?? '',
+                  heroTag: 'field1',
                 ),
                 LoginFormField(
                   'Password',
@@ -103,25 +110,34 @@ class _LoginPageState extends State<LoginPage> {
                     return null;
                   },
                   onSaved: (value) => _password = value ?? '',
+                  heroTag: 'field2',
                 ),
                 const SizedBox(height: 16),
-                PaddedButton(
-                  onPressed: () => _onLogin(false),
-                  child: const Text('LOGIN'),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    PaddedButton(
-                      onPressed: () => context.go('/register'),
-                      child: const Text('NEW USER?'),
-                    ),
-                    GoogleButton(
-                      'SIGN IN',
-                      onPressed: () => _onLogin(true),
-                    ),
-                  ],
+                HeroMaterial(
+                  tag: 'buttons',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      PaddedButton(
+                        onPressed: () => _onLogin(false),
+                        child: const Text('LOGIN'),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          PaddedButton(
+                            onPressed: () => context.go('/register'),
+                            child: const Text('NEW USER?'),
+                          ),
+                          GoogleButton(
+                            'SIGN IN',
+                            onPressed: () => _onLogin(true),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 )
               ],
             ),

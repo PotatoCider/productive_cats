@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_config/flutter_config.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:productive_cats/models/cat.dart';
 import 'package:productive_cats/pages/buddy.dart';
 import 'package:productive_cats/pages/cat_collection.dart';
+import 'package:productive_cats/pages/cat_info.dart';
 import 'package:productive_cats/pages/leaderboard.dart';
 
 import 'package:productive_cats/pages/login.dart';
@@ -24,6 +29,14 @@ void main() async {
   Appwrite.init();
   Wakelock.enable();
 
+  Hive.registerAdapter(CatAdapter());
+
+  await Hive.initFlutter();
+  await Future.wait([
+    Cat.openBox(),
+    Hive.openBox<String>('settings'),
+  ]);
+
   runApp(App());
 }
 
@@ -43,24 +56,35 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => Coins()),
         ChangeNotifierProvider(create: (_) => AppUsages(), lazy: false),
       ],
-      child: MaterialApp.router(
-        title: 'Productive Cats',
-        theme: ThemeData(
-          primarySwatch: Colors.indigo,
-          brightness: Brightness.light,
-        ),
-        darkTheme: ThemeData(
-          primarySwatch: Colors.indigo,
-          brightness: Brightness.dark,
-        ),
-        routeInformationParser: _router.routeInformationParser,
-        routerDelegate: _router.routerDelegate,
-      ),
+      child: ValueListenableBuilder<Box<String>>(
+          valueListenable: Hive.box<String>('settings').listenable(),
+          builder: (context, box, child) {
+            var themeMode = ThemeMode.system;
+            if (box.containsKey('dark_mode')) {
+              themeMode = box.get('dark_mode') == '1'
+                  ? ThemeMode.dark
+                  : ThemeMode.light;
+            }
+            return MaterialApp.router(
+              title: 'Productive Cats',
+              themeMode: themeMode,
+              theme: ThemeData(
+                primarySwatch: Colors.indigo,
+                brightness: Brightness.light,
+              ),
+              darkTheme: ThemeData(
+                primarySwatch: Colors.indigo,
+                brightness: Brightness.dark,
+              ),
+              routeInformationParser: _router.routeInformationParser,
+              routerDelegate: _router.routerDelegate,
+            );
+          }),
     );
   }
 
   late final _router = GoRouter(
-    initialLocation: '/appusage',
+    initialLocation: '/cats',
     refreshListenable: user,
     redirect: (state) {
       if (user.loading) return null;
@@ -76,6 +100,10 @@ class App extends StatelessWidget {
     },
     routes: [
       GoRoute(
+        path: '/',
+        builder: (context, state) => const BuddyPage(),
+      ),
+      GoRoute(
         path: '/login',
         builder: (context, state) => const LoginPage(),
       ),
@@ -88,8 +116,23 @@ class App extends StatelessWidget {
         builder: (context, state) => const BuddyPage(),
       ),
       GoRoute(
-        path: '/collection',
+        path: '/cats',
         builder: (context, state) => const CatCollectionPage(),
+        routes: [
+          GoRoute(
+            path: ':index',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              child: CatInfoPage(
+                Cat.catbox.getAt(int.parse(state.params['index']!))!,
+              ),
+              transitionsBuilder: (context, animation, _, child) =>
+                  FadeTransition(
+                opacity: animation,
+                child: child,
+              ),
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/catbox',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:productive_cats/widgets/hero_material.dart';
 
 class LoginFormField extends StatelessWidget {
   const LoginFormField(
@@ -10,6 +11,7 @@ class LoginFormField extends StatelessWidget {
     this.obscureText = false,
     this.initialValue,
     this.enabled = true,
+    this.heroTag,
     Key? key,
   }) : super(key: key);
 
@@ -21,10 +23,11 @@ class LoginFormField extends StatelessWidget {
   final bool obscureText;
   final String? initialValue;
   final bool enabled;
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    Widget widget = Padding(
       padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,5 +56,10 @@ class LoginFormField extends StatelessWidget {
         ],
       ),
     );
+
+    if (heroTag != null) {
+      widget = HeroMaterial(tag: heroTag!, child: widget);
+    }
+    return widget;
   }
 }

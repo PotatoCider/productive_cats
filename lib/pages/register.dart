@@ -5,13 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:productive_cats/providers/user_info.dart';
 import 'package:productive_cats/utils/appwrite.dart';
-import 'package:productive_cats/widgets/buttons.dart';
+import 'package:productive_cats/widgets/format_text.dart';
+import 'package:productive_cats/widgets/hero_material.dart';
+import 'package:productive_cats/widgets/login_buttons.dart';
 import 'package:productive_cats/widgets/nav_drawer.dart';
 import 'package:productive_cats/utils/utils.dart';
 import 'package:productive_cats/widgets/heading.dart';
 import 'package:productive_cats/widgets/login_field.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -61,6 +62,8 @@ class _RegisterPageState extends State<RegisterPage> {
             password: _password,
           );
         }
+
+        await Future<void>.delayed(const Duration(seconds: 1));
         await user.fetch();
 
         Appwrite.database.createDocument(
@@ -92,9 +95,10 @@ class _RegisterPageState extends State<RegisterPage> {
     final user = context.watch<UserInfo>();
     return Scaffold(
       appBar: AppBar(
+        leading: const SizedBox.shrink(),
         title: const Text('Register'),
       ),
-      drawer: const NavigationDrawer(DrawerItems.register),
+      // drawer: const NavigationDrawer(DrawerItems.register),
       body: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Form(
@@ -102,10 +106,10 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 32),
-                const Heading('Productive Cats'),
+                const FormatText('Productive Cats',
+                    size: 32, bold: true, center: true, hero: true),
                 const SizedBox(height: 8),
                 if (user.registerGoogle)
                   Container(
@@ -131,6 +135,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   onSaved: (value) => _email = value ?? '',
                   initialValue: user.user?.email ?? '',
                   enabled: !user.registerGoogle,
+                  heroTag: 'field1',
                 ),
                 LoginFormField(
                   'Name',
@@ -144,6 +149,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   onSaved: (value) => _name = value ?? '',
                   initialValue: user.user?.name ?? '',
                   enabled: !user.registerGoogle,
+                  heroTag: 'field2',
                 ),
                 LoginFormField(
                   'Username',
@@ -180,28 +186,36 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                 ),
                 const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () => _onRegister(false),
-                  child: const Text('REGISTER'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
+                HeroMaterial(
+                  tag: 'buttons',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => _onRegister(false),
+                        child: const Text('REGISTER'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.all(16),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (!user.registerGoogle)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            PaddedButton(
+                              child: const Text('OLD USER?'),
+                              onPressed: () => context.go('/login'),
+                            ),
+                            GoogleButton(
+                              'SIGN UP',
+                              onPressed: () => _onRegister(true),
+                            ),
+                          ],
+                        )
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                if (!user.registerGoogle)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      PaddedButton(
-                        child: const Text('OLD USER?'),
-                        onPressed: () => context.go('/login'),
-                      ),
-                      GoogleButton(
-                        'SIGN UP',
-                        onPressed: () => _onRegister(true),
-                      ),
-                    ],
-                  )
               ],
             ),
           ),

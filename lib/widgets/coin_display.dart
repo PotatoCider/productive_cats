@@ -36,8 +36,8 @@ class CoinDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var size = Theme.of(context).textTheme.headline6?.fontSize;
-    if (size != null) size *= scale;
+    var size = Theme.of(context).textTheme.headline6?.fontSize ?? 14;
+    size *= scale;
     return Card(
       color: Theme.of(context).backgroundColor,
       shape: RoundedRectangleBorder(
@@ -47,8 +47,11 @@ class CoinDisplay extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'images/coin.png',
+            Image(
+              image: ResizeImage(
+                const AssetImage('images/coin.png'),
+                height: size.toInt() * 2,
+              ),
               height: size,
             ),
             SizedBox(width: 8 * scale),

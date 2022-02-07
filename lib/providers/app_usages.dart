@@ -4,97 +4,111 @@ import 'package:app_usage/app_usage.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
 import 'package:productive_cats/utils/utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AppUsages with ChangeNotifier {
   AppUsages() {
-    sync();
+    fetch();
   }
 
-  late final DateTime firstUpdate;
-  DateTime? lastUpdated;
-  Map<String, Duration> durations = {};
-  Duration totalDuration = const Duration();
+  final DateTime _i = DateTime.now();
+
+  late final AppUsagePeriod yesterday = AppUsagePeriod(
+    start: DateTime(_i.year, _i.month, _i.day - 1),
+    end: DateTime(_i.year, _i.month, _i.day),
+  );
+  late final AppUsagePeriod lastMonth = AppUsagePeriod(
+    start: DateTime(_i.year, _i.month - 1, 1),
+    end: DateTime(_i.year, _i.month, 1),
+  );
+  late final AppUsagePeriod lastYear = AppUsagePeriod(
+    start: DateTime(_i.year - 1, 1, 1),
+    end: DateTime(_i.year, 1, 1),
+  );
+
+  late AppUsagePeriod _selected = yesterday;
+  AppUsagePeriod get selected => _selected;
+  set selected(AppUsagePeriod selected) {
+    _selected = selected;
+    notifyListeners();
+  }
+
   Map<String, ApplicationWithIcon> apps = {};
 
-  Future<void> fetchApps() async {
-    for (var name in durations.keys) {
-      if (apps.containsKey(name)) continue;
-      var app = await DeviceApps.getApp(name, true) as ApplicationWithIcon?;
-      if (app == null) continue;
-      apps[name] = app;
+  Future<void> fetchApps([bool notify = true]) async {
+    Set<String> appNames = yesterday.durations.keys.toSet();
+    appNames.addAll(lastMonth.durations.keys);
+    appNames.addAll(lastYear.durations.keys);
+    appNames.removeAll(apps.keys);
+
+    for (var name in appNames) {
+      var app = await DeviceApps.getApp(name, true);
+      if (app != null) apps[name] = app as ApplicationWithIcon;
     }
+
+    if (notify) notifyListeners();
   }
 
-  Future<bool> sync() async {
-    var prefs = await SharedPreferences.getInstance();
-    await prefs.remove('app_usages');
-    String? json = prefs.getString('app_usages');
+  Future<void> fetch() async {
+    Utils.log('fetching...');
+    await yesterday.fetch();
+    await fetchApps(true);
+    Utils.log('yesterday done');
+    await lastMonth.fetch();
+    await fetchApps(true);
+    Utils.log('month done');
+    await lastYear.fetch();
+    await fetchApps(true);
+    Utils.log('year done');
 
-    if (json != null) {
-      var newThis =
-          AppUsages.fromJson(jsonDecode(json) as Map<String, dynamic>);
+    Utils.log('fetchApps done');
+  }
+}
 
-      // update if not fetched, or out of date
-      if (lastUpdated == null ||
-          (newThis.lastUpdated?.compareTo(lastUpdated!) ?? 0) > 1) {
-        firstUpdate = newThis.firstUpdate;
-        lastUpdated = newThis.lastUpdated;
-        durations = newThis.durations;
+class AppUsagePeriod with ChangeNotifier {
+  AppUsagePeriod({
+    required this.start,
+    required this.end,
+    this.period,
+  }) {
+    fetch();
+  }
+
+  Future? loading;
+  Duration totalDuration = const Duration();
+  Map<String, Duration> durations = {};
+
+  late final Duration maxDuration = end.difference(start);
+  final DateTime start;
+  final DateTime end;
+  String? period;
+
+  Duration get offlineDuration => maxDuration - totalDuration;
+
+  Future<void> fetch() async {
+    if (loading != null) return loading;
+    loading = Future<void>(() async {
+      var infos = await AppUsage.getAppUsage(start, end);
+
+      totalDuration = const Duration();
+      for (var info in infos) {
+        var name = info.packageName;
+        durations[name] = info.usage;
+        totalDuration += durations[name]!;
       }
-      Utils.logNamed('usage read: ', json);
-    }
 
-    var now = DateTime.now();
-
-    if (lastUpdated == null) {
-      // first update
-      firstUpdate = now.subtract(const Duration(days: 730));
-      lastUpdated = firstUpdate;
-    }
-
-    var appUsageInfos = await AppUsage.getAppUsage(lastUpdated!, now);
-    Utils.logNamed('infos:', appUsageInfos);
-
-    totalDuration = const Duration();
-    for (var info in appUsageInfos) {
-      var name = info.packageName;
-      durations[name] = (durations[name] ?? const Duration()) + info.usage;
-      totalDuration += durations[name] ?? const Duration();
-    }
-    lastUpdated = now;
-    await fetchApps();
-    notifyListeners();
-    // return save();
-    return true;
+      _appNamesByUsage = null;
+      notifyListeners();
+    });
   }
 
-  Future<bool> save() async {
-    Utils.logNamed('usage save: ', jsonEncode(toJson()));
-    var prefs = await SharedPreferences.getInstance();
-    return prefs.setString('app_usages', jsonEncode(toJson()));
-  }
+  List<String>? _appNamesByUsage;
+  // returns package names of app sorted by usage descending
+  List<String> get appNamesByUsage {
+    if (_appNamesByUsage != null) return _appNamesByUsage!;
 
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'firstUpdate': firstUpdate.toIso8601String(),
-      'lastUpdated': lastUpdated?.toIso8601String(),
-      'durations':
-          durations.map((name, duration) => MapEntry(name, duration.inSeconds))
-    };
-  }
-
-  AppUsages.fromJson(Map<String, dynamic> json) {
-    try {
-      firstUpdate = DateTime.parse(json['firstUpdate'] as String);
-      lastUpdated = DateTime.parse(json['lastUpdated'] as String);
-
-      durations = (json['durations'] as Map<String, dynamic>)
-          .cast<String, int>()
-          .map<String, Duration>(
-              (name, duration) => MapEntry(name, Duration(seconds: duration)));
-    } catch (e) {
-      Utils.log(e);
-    }
+    var appNames = durations.keys.toList();
+    appNames.sort((n1, n2) => durations[n2]!.compareTo(durations[n1]!));
+    _appNamesByUsage = appNames;
+    return appNames;
   }
 }

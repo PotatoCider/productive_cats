@@ -51,7 +51,7 @@ class NavigationDrawer extends StatelessWidget {
                   leading: const Icon(Icons.collections),
                   title: const Text('Your Cat Collection'),
                   selected: _selected == DrawerItems.collection,
-                  onTap: navigateRoute(context, '/collection'),
+                  onTap: navigateRoute(context, '/cats'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.add_box),
@@ -71,12 +71,12 @@ class NavigationDrawer extends StatelessWidget {
                   selected: _selected == DrawerItems.appusage,
                   onTap: navigateRoute(context, '/appusage'),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.leaderboard),
-                  title: const Text('Leaderboard'),
-                  selected: _selected == DrawerItems.leaderboard,
-                  onTap: navigateRoute(context, '/leaderboard'),
-                ),
+                // ListTile(
+                //   leading: const Icon(Icons.leaderboard),
+                //   title: const Text('Leaderboard'),
+                //   selected: _selected == DrawerItems.leaderboard,
+                //   onTap: navigateRoute(context, '/leaderboard'),
+                // ),
               ],
             ),
           ),
@@ -86,12 +86,12 @@ class NavigationDrawer extends StatelessWidget {
             selected: _selected == DrawerItems.settings,
             onTap: navigateRoute(context, '/settings'),
           ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Logout'),
-            // selected: _selected == DrawerItems.logout,
-            onTap: () => context.read<UserInfo>().logout(),
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.logout),
+          //   title: const Text('Logout'),
+          //   // selected: _selected == DrawerItems.logout,
+          //   onTap: () => context.read<UserInfo>().logout(),
+          // ),
         ],
       ),
     );
