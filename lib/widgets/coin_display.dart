@@ -41,7 +41,8 @@ class CoinDisplay extends StatelessWidget {
     return Card(
       color: Theme.of(context).backgroundColor,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16 * scale)),
+        borderRadius: BorderRadius.circular(16 * scale),
+      ),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8 * scale),
         child: Row(
@@ -55,19 +56,19 @@ class CoinDisplay extends StatelessWidget {
               height: size,
             ),
             SizedBox(width: 8 * scale),
-            Consumer<Coins>(
-              builder: (context, coins, child) => Row(
-                children: [
-                  Text(
-                    coins.value.toString(),
+            Row(
+              children: [
+                Consumer<Coins>(
+                  builder: (context, coins, child) => Text(
+                    coins.coinsInt.toString(),
                     style: TextStyle(
                       fontSize: size,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  ...?additional,
-                ],
-              ),
+                ),
+                ...?additional,
+              ],
             ),
           ],
         ),

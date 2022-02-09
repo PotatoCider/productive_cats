@@ -33,10 +33,12 @@ class PaddedButton extends StatelessWidget {
     required this.child,
     required this.onPressed,
     this.padding = 16,
+    this.color,
     Key? key,
   }) : super(key: key);
 
   final Widget? child;
+  final Color? color;
   final void Function()? onPressed;
   final double padding;
 
@@ -46,6 +48,7 @@ class PaddedButton extends StatelessWidget {
       onPressed: onPressed,
       child: child,
       style: ElevatedButton.styleFrom(
+        primary: color,
         padding: EdgeInsets.all(padding),
       ),
     );

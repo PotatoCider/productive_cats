@@ -10,6 +10,7 @@ class Utils {
 
   static void showSnackBar(BuildContext context, String text) =>
       WidgetsBinding.instance!.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
           content: Text(text),

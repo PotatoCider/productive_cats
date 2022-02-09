@@ -3,64 +3,61 @@ import 'dart:convert';
 import 'package:app_usage/app_usage.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:productive_cats/utils/utils.dart';
 
 class AppUsages with ChangeNotifier {
   AppUsages() {
-    fetch();
+    var n = DateTime.now();
+    yesterday = AppUsagePeriod(
+      start: DateTime(n.year, n.month, n.day - 1),
+      end: DateTime(n.year, n.month, n.day),
+      periodText: 'yesterday',
+    );
+    lastMonth = AppUsagePeriod(
+      start: DateTime(n.year, n.month - 1, 1),
+      end: DateTime(n.year, n.month, 1),
+      periodText: 'last month',
+    );
+    lastYear = AppUsagePeriod(
+      start: DateTime(n.year - 1, 1, 1),
+      end: DateTime(n.year, 1, 1),
+      periodText: 'last year',
+    );
+    _selected = yesterday;
   }
 
-  final DateTime _i = DateTime.now();
+  late final AppUsagePeriod yesterday;
+  late final AppUsagePeriod lastMonth;
+  late final AppUsagePeriod lastYear;
 
-  late final AppUsagePeriod yesterday = AppUsagePeriod(
-    start: DateTime(_i.year, _i.month, _i.day - 1),
-    end: DateTime(_i.year, _i.month, _i.day),
-  );
-  late final AppUsagePeriod lastMonth = AppUsagePeriod(
-    start: DateTime(_i.year, _i.month - 1, 1),
-    end: DateTime(_i.year, _i.month, 1),
-  );
-  late final AppUsagePeriod lastYear = AppUsagePeriod(
-    start: DateTime(_i.year - 1, 1, 1),
-    end: DateTime(_i.year, 1, 1),
-  );
-
-  late AppUsagePeriod _selected = yesterday;
+  late AppUsagePeriod _selected;
   AppUsagePeriod get selected => _selected;
   set selected(AppUsagePeriod selected) {
     _selected = selected;
+    if (!fetched) fetch();
     notifyListeners();
   }
 
+  bool get fetched => _selected.fetched;
+
   Map<String, ApplicationWithIcon> apps = {};
 
-  Future<void> fetchApps([bool notify = true]) async {
-    Set<String> appNames = yesterday.durations.keys.toSet();
-    appNames.addAll(lastMonth.durations.keys);
-    appNames.addAll(lastYear.durations.keys);
-    appNames.removeAll(apps.keys);
+  Future<void> fetchApps(AppUsagePeriod period) async {
+    var appNames = period.durations.keys.toSet();
 
     for (var name in appNames) {
       var app = await DeviceApps.getApp(name, true);
       if (app != null) apps[name] = app as ApplicationWithIcon;
     }
 
-    if (notify) notifyListeners();
+    notifyListeners();
   }
 
-  Future<void> fetch() async {
-    Utils.log('fetching...');
-    await yesterday.fetch();
-    await fetchApps(true);
-    Utils.log('yesterday done');
-    await lastMonth.fetch();
-    await fetchApps(true);
-    Utils.log('month done');
-    await lastYear.fetch();
-    await fetchApps(true);
-    Utils.log('year done');
-
-    Utils.log('fetchApps done');
+  Future<void> fetch([AppUsagePeriod? period]) async {
+    period ??= selected;
+    await period.fetch();
+    await fetchApps(period);
   }
 }
 
@@ -68,37 +65,46 @@ class AppUsagePeriod with ChangeNotifier {
   AppUsagePeriod({
     required this.start,
     required this.end,
-    this.period,
-  }) {
-    fetch();
+    String? periodText,
+  }) : custom = periodText == null {
+    if (periodText == null) {
+      var now = DateTime.now();
+      var isDiffYear = end.year != now.year || start.year != now.year;
+      var fmt = isDiffYear ? DateFormat.yMMMd() : DateFormat.MMMd();
+      var startFmt = periodText =
+          'from ${fmt.format(start) + (isDiffYear ? '\n' : ' ')}to ${fmt.format(end)}';
+    }
+    text = periodText;
   }
 
-  Future? loading;
+  bool fetched = false;
   Duration totalDuration = const Duration();
   Map<String, Duration> durations = {};
 
   late final Duration maxDuration = end.difference(start);
   final DateTime start;
   final DateTime end;
-  String? period;
+  late final String text;
+  final bool custom;
 
   Duration get offlineDuration => maxDuration - totalDuration;
 
-  Future<void> fetch() async {
-    if (loading != null) return loading;
-    loading = Future<void>(() async {
-      var infos = await AppUsage.getAppUsage(start, end);
+  Future<bool> fetch() async {
+    fetched = false;
+    var infos = await AppUsage.getAppUsage(start, end);
+    if (infos.isEmpty) return false;
 
-      totalDuration = const Duration();
-      for (var info in infos) {
-        var name = info.packageName;
-        durations[name] = info.usage;
-        totalDuration += durations[name]!;
-      }
+    totalDuration = const Duration();
+    for (var info in infos) {
+      var name = info.packageName;
+      durations[name] = info.usage;
+      totalDuration += durations[name]!;
+    }
 
-      _appNamesByUsage = null;
-      notifyListeners();
-    });
+    _appNamesByUsage = null;
+    fetched = true;
+    notifyListeners();
+    return true;
   }
 
   List<String>? _appNamesByUsage;

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_config/flutter_config.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:productive_cats/models/cat.dart';
 import 'package:productive_cats/pages/buddy.dart';
 import 'package:productive_cats/pages/cat_collection.dart';
@@ -18,6 +16,7 @@ import 'package:productive_cats/pages/app_usage.dart';
 import 'package:productive_cats/pages/trading.dart';
 import 'package:productive_cats/providers/app_usages.dart';
 import 'package:productive_cats/providers/coins.dart';
+import 'package:productive_cats/providers/daily_updater.dart';
 import 'package:productive_cats/providers/user_info.dart';
 import 'package:productive_cats/utils/appwrite.dart';
 import 'package:provider/provider.dart';
@@ -37,24 +36,43 @@ void main() async {
     Hive.openBox<String>('settings'),
   ]);
 
-  runApp(App());
+  runApp(const App());
 }
 
-class App extends StatelessWidget {
-  App({Key? key})
-      : user = UserInfo(),
-        super(key: key);
+class App extends StatefulWidget {
+  const App({Key? key}) : super(key: key);
 
-  final UserInfo user;
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  final UserInfo user = UserInfo();
+  final Coins coins = Coins();
+  final AppUsages usages = AppUsages();
+
+  @override
+  void initState() {
+    super.initState();
+    user.fetch();
+  }
+
+  @override
+  void dispose() {
+    user.dispose();
+    coins.dispose();
+    usages.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    user.fetch();
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: user),
-        ChangeNotifierProvider(create: (_) => Coins()),
-        ChangeNotifierProvider(create: (_) => AppUsages(), lazy: false),
+        ChangeNotifierProvider.value(value: coins),
+        ChangeNotifierProvider.value(value: usages),
+        ChangeNotifierProvider(create: (_) => DailyUpdater(usages, coins)),
       ],
       child: ValueListenableBuilder<Box<String>>(
           valueListenable: Hive.box<String>('settings').listenable(),
@@ -68,6 +86,7 @@ class App extends StatelessWidget {
             return MaterialApp.router(
               title: 'Productive Cats',
               themeMode: themeMode,
+              debugShowCheckedModeBanner: false,
               theme: ThemeData(
                 primarySwatch: Colors.indigo,
                 brightness: Brightness.light,
@@ -90,7 +109,7 @@ class App extends StatelessWidget {
       if (user.loading) return null;
       var isLoginScreen =
           (state.location == '/login' || state.location == '/register');
-      if (isLoginScreen && user.loggedIn) return '/buddy';
+      if (isLoginScreen && user.loggedIn) return '/cats';
       if (!isLoginScreen && !user.loggedIn) return '/login';
       if (state.location != '/register' && user.registerGoogle) {
         return '/register';
@@ -123,7 +142,7 @@ class App extends StatelessWidget {
             path: ':index',
             pageBuilder: (context, state) => CustomTransitionPage(
               child: CatInfoPage(
-                Cat.catbox.getAt(int.parse(state.params['index']!))!,
+                int.parse(state.params['index']!),
               ),
               transitionsBuilder: (context, animation, _, child) =>
                   FadeTransition(
@@ -143,7 +162,7 @@ class App extends StatelessWidget {
         builder: (context, state) => const TradingPage(),
       ),
       GoRoute(
-        path: '/appusage',
+        path: '/usage',
         builder: (context, state) => const AppUsagePage(),
       ),
       GoRoute(

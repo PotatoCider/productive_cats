@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:device_apps/device_apps.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:productive_cats/cat_names.dart';
+import 'package:productive_cats/utils/cat_names.dart';
 import 'package:productive_cats/providers/app_usages.dart';
 import 'package:productive_cats/utils/utils.dart';
 import 'package:uuid/uuid.dart';
@@ -23,6 +23,7 @@ class Cat extends HiveObject {
     this.level = 1,
     this.experience = 0,
     required this.preferences,
+    this.todayExp = 0,
   })  : happiness = maxHappiness.toDouble(),
         fitness = maxFitness.toDouble();
 
@@ -95,12 +96,6 @@ class Cat extends HiveObject {
     return cat;
   }
 
-  static void updateDailyUsage(AppUsages usages) {
-    for (var cat in Cat.catbox.values) {
-      cat.consumeDailyUsage(usages.yesterday, usages.apps);
-    }
-  }
-
   @HiveField(0)
   final String id;
 
@@ -130,6 +125,9 @@ class Cat extends HiveObject {
 
   @HiveField(9)
   late final Map<String, double> preferences;
+
+  @HiveField(10, defaultValue: 0)
+  double todayExp;
 
   // consumeDailyUsage is used to calculate and add the cat's experience
   // from today's usage. This method is intended to be called once per day.
@@ -167,19 +165,23 @@ class Cat extends HiveObject {
       var r =
           period.durations[name]!.inSeconds / period.totalDuration.inSeconds;
 
-      // multiply with the inverse of how much the cat prefers this app
-      // (i.e. the more the cat dislikes the app, the more the cat
-      // does not gain exp from it)
-      var rweighted = r * (1 - pweighted[cat]!);
+      // multiply with how much the cat prefers this app
+      var rweighted = r * pweighted[cat]!;
       rsum += rweighted;
     }
+    Utils.log(rsum);
+    Utils.log(maxExperience);
+    Utils.log(baselineExp);
 
-    // then we take the inverse of weighted sum of app usage
-    // and multiply it with the max exp. This makes it so that the cat
+    // then we take the weighted sum of app usage and multiply it
+    // with the max exp and offline time. This makes it so that the cat
     // gains more exp when you are not using your phone.
-    var exp = maxExperience * (1 - rsum) + baselineExp / 0.1;
+    var offlineRatio =
+        period.offlineDuration.inSeconds / period.maxDuration.inSeconds;
+    var exp = maxExperience * rsum * offlineRatio;
 
-    addExperience(experience);
+    todayExp = exp;
+    addExperience(exp);
     return exp;
   }
 
@@ -198,6 +200,10 @@ class Cat extends HiveObject {
 
     save();
     return experience;
+  }
+
+  double get price {
+    return 50 + level * 50;
   }
 
   @override

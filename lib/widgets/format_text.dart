@@ -12,6 +12,7 @@ class FormatText extends StatelessWidget {
     this.hero = false,
     this.heroTag,
     this.center = false,
+    this.shadow = false,
     Key? key,
   }) : super(key: key);
 
@@ -24,6 +25,7 @@ class FormatText extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final bool hero;
   final String? heroTag;
+  final bool shadow;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +38,15 @@ class FormatText extends StatelessWidget {
         color: color,
         fontWeight: weight ?? (bold ? FontWeight.bold : null),
         fontSize: size,
+        shadows: shadow
+            ? [
+                const Shadow(
+                  offset: Offset(0.1, 0.1),
+                  blurRadius: 0.5,
+                  color: Color.fromARGB(255, 0, 0, 0),
+                ),
+              ]
+            : null,
       ),
     );
 

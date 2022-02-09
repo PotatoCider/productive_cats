@@ -62,14 +62,14 @@ class SettingsPage extends StatelessWidget {
                 title: const FormatText('Logout', color: Colors.red),
                 onTap: () => _showLogoutDialog(context),
               ),
-              const Divider(),
-              const SettingsHeading('Developer'),
-              ListTile(
-                  leading: const Icon(Icons.developer_mode),
-                  title: const FormatText('Simulate cat experience gain'),
-                  onTap: () {
-                    Cat.updateDailyUsage(context.read<AppUsages>());
-                  }),
+              // const Divider(),
+              // const SettingsHeading('Developer'),
+              // ListTile(
+              //     leading: const Icon(Icons.developer_mode),
+              //     title: const FormatText('Simulate cat experience gain'),
+              //     onTap: () {
+              //       Cat.updateDailyUsage(context.read<AppUsages>());
+              //     }),
             ],
           );
         },

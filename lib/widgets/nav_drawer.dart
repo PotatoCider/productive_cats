@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:productive_cats/providers/user_info.dart';
+import 'package:productive_cats/widgets/format_text.dart';
 import 'package:provider/provider.dart';
 
 enum DrawerItems {
@@ -9,7 +12,7 @@ enum DrawerItems {
   collection,
   catbox,
   trading,
-  appusage,
+  usage,
   leaderboard,
   settings,
   logout,
@@ -37,39 +40,58 @@ class NavigationDrawer extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                const DrawerHeader(
-                  decoration: BoxDecoration(color: Colors.grey),
-                  child: Text('Drawer Header'),
+                DrawerHeader(
+                  child: Stack(
+                    clipBehavior: Clip.hardEdge,
+                    fit: StackFit.expand,
+                    children: [
+                      ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                          sigmaY: 5,
+                          sigmaX: 5,
+                          tileMode: TileMode.clamp,
+                        ),
+                        child: Image.asset(
+                          'images/cat.png',
+                          fit: BoxFit.fitWidth,
+                        ),
+                      ),
+                      const FormatText(
+                        'Productive Cats',
+                        bold: true,
+                      ),
+                    ],
+                  ),
                 ),
+                // ListTile(
+                //   leading: const Icon(Icons.home),
+                //   title: const Text('Productive Cats'),
+                //   selected: _selected == DrawerItems.buddy,
+                //   onTap: navigateRoute(context, '/buddy'),
+                // ),
                 ListTile(
                   leading: const Icon(Icons.home),
-                  title: const Text('Productive Cats'),
-                  selected: _selected == DrawerItems.buddy,
-                  onTap: navigateRoute(context, '/buddy'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.collections),
                   title: const Text('Your Cat Collection'),
                   selected: _selected == DrawerItems.collection,
                   onTap: navigateRoute(context, '/cats'),
                 ),
+                // ListTile(
+                //   leading: const Icon(Icons.add_box),
+                //   title: const Text('Cat Box'),
+                //   selected: _selected == DrawerItems.catbox,
+                //   onTap: navigateRoute(context, '/catbox'),
+                // ),
                 ListTile(
-                  leading: const Icon(Icons.add_box),
-                  title: const Text('Cat Box'),
-                  selected: _selected == DrawerItems.catbox,
-                  onTap: navigateRoute(context, '/catbox'),
+                  leading: const Icon(Icons.show_chart),
+                  title: const Text('App Usage'),
+                  selected: _selected == DrawerItems.usage,
+                  onTap: navigateRoute(context, '/usage'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.compare_arrows),
                   title: const Text('Trading'),
                   selected: _selected == DrawerItems.trading,
                   onTap: navigateRoute(context, '/trading'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.show_chart),
-                  title: const Text('App Usage'),
-                  selected: _selected == DrawerItems.appusage,
-                  onTap: navigateRoute(context, '/appusage'),
                 ),
                 // ListTile(
                 //   leading: const Icon(Icons.leaderboard),
