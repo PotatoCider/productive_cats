@@ -11,7 +11,7 @@ enum DrawerItems {
   buddy,
   collection,
   catbox,
-  trading,
+  market,
   usage,
   leaderboard,
   settings,
@@ -25,7 +25,7 @@ class NavigationDrawer extends StatelessWidget {
   void Function() navigateRoute(BuildContext context, String route) {
     return () {
       Navigator.pop(context); // close drawer
-      context.go(route);
+      context.push(route);
     };
   }
 
@@ -89,9 +89,9 @@ class NavigationDrawer extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.compare_arrows),
-                  title: const Text('Trading'),
-                  selected: _selected == DrawerItems.trading,
-                  onTap: navigateRoute(context, '/trading'),
+                  title: const Text('Market'),
+                  selected: _selected == DrawerItems.market,
+                  onTap: navigateRoute(context, '/market'),
                 ),
                 // ListTile(
                 //   leading: const Icon(Icons.leaderboard),

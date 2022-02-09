@@ -1,12 +1,18 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:device_apps/device_apps.dart';
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:productive_cats/providers/user_info.dart';
+import 'package:productive_cats/utils/appwrite.dart';
 import 'package:productive_cats/utils/cat_names.dart';
 import 'package:productive_cats/providers/app_usages.dart';
 import 'package:productive_cats/utils/utils.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 
@@ -18,27 +24,33 @@ class Cat extends HiveObject {
     required this.id,
     required this.maxHappiness,
     required this.maxFitness,
-    required this.imagePath,
+    this.imagePath,
     required this.name,
     this.level = 1,
     this.experience = 0,
     required this.preferences,
     this.todayExp = 0,
+    this.imageBytes,
+    double? price,
+    this.soldBy,
+    this.docID,
   })  : happiness = maxHappiness.toDouble(),
-        fitness = maxFitness.toDouble();
+        fitness = maxFitness.toDouble(),
+        _price = price;
 
   static const minHappinessValue = 100;
   static const maxHappinessValue = 500;
   static const minFitnessValue = 100;
   static const maxFitnessValue = 500;
 
-  static late Box<Cat> _box;
+  static Box<Cat>? _box;
 
-  static Box<Cat> get catbox => _box;
+  static Box<Cat>? get catbox => _box;
 
-  static Future<Box<Cat>> openBox() async => _box = await Hive.openBox('cats');
+  static Future<Box<Cat>> openBox(String id) async =>
+      _box = await Hive.openBox('${id}_cats');
 
-  static Cat? get buddy => Cat.catbox.get('buddy');
+  // static Cat? get buddy => Cat.catbox.get('buddy');
 
   static bool generating = false;
 
@@ -54,9 +66,9 @@ class Cat extends HiveObject {
     // save image
     try {
       await getApplicationDocumentsDirectory().then((dir) async {
-        file = File('${dir.path}/images/$id');
+        file = File('${dir.path}/images/$id.jpg');
         await file.create(recursive: true);
-        file.writeAsBytes((await futureRes).bodyBytes);
+        await file.writeAsBytes((await futureRes).bodyBytes);
       });
     } catch (err) {
       Utils.logNamed('generate cats', err);
@@ -85,7 +97,7 @@ class Cat extends HiveObject {
       preferences: prefs,
     );
 
-    var box = Cat.catbox;
+    var box = Cat.catbox!;
     if (buddy) {
       box.put('buddy', cat);
     } else {
@@ -94,6 +106,34 @@ class Cat extends HiveObject {
 
     generating = false;
     return cat;
+  }
+
+  static Future<Cat> fromPayload(Map<String, dynamic> payload) async {
+    var fileBytes = await Appwrite.storage
+        .getFilePreview(fileId: payload['file'] as String);
+    return Cat(
+      id: payload['id'] as String,
+      maxHappiness: payload['max_happiness'] as int,
+      maxFitness: payload['max_fitness'] as int,
+      name: payload['name'] as String,
+      level: payload['level'] as int,
+      experience: (payload['experience'] as num).toDouble(),
+      preferences: Map<String, double>.from(
+          jsonDecode(payload['preferences'] as String) as Map),
+      imageBytes: fileBytes,
+      price: (payload['price'] as num).toDouble(),
+      soldBy: payload['owner'] as String?,
+      docID: payload['\$id'] as String,
+    );
+  }
+
+  String? soldBy; // user id
+  String? docID;
+  double? _price;
+  Uint8List? imageBytes;
+
+  double get price {
+    return _price ?? 50 + level * 50;
   }
 
   @HiveField(0)
@@ -106,7 +146,7 @@ class Cat extends HiveObject {
   final int maxFitness;
 
   @HiveField(3)
-  final String imagePath;
+  String? imagePath;
 
   @HiveField(4)
   String name;
@@ -133,7 +173,7 @@ class Cat extends HiveObject {
   // from today's usage. This method is intended to be called once per day.
   double consumeDailyUsage(
       AppUsagePeriod period, Map<String, ApplicationWithIcon> apps) {
-    if (period.durations.isEmpty) return 0;
+    if (period.durations.isEmpty || period.offlineDuration.isNegative) return 0;
 
     // first we take into account of the app usage of each app,
     // based on the cat's preferences of app's category.
@@ -202,13 +242,69 @@ class Cat extends HiveObject {
     return experience;
   }
 
-  double get price {
-    return 50 + level * 50;
+  Future<void> buyFromMarket() async {
+    if (imageBytes == null) return;
+    // save image
+    late File file;
+    try {
+      await getApplicationDocumentsDirectory().then((dir) async {
+        file = File('${dir.path}/images/$id.jpg');
+        await file.create(recursive: true);
+        await file.writeAsBytes(imageBytes!);
+      });
+    } catch (err) {
+      Utils.logNamed('buy cat', err);
+      return;
+    }
+    imagePath = file.path;
+    _price = null;
+    imageBytes = null;
+    soldBy = null;
+    await Cat.catbox!.add(this);
   }
 
-  @override
-  Future<void> delete() {
-    File(imagePath).delete();
+  Future<void> removeFromMarket() async {
+    await Future.wait<dynamic>([
+      Appwrite.storage.deleteFile(fileId: id),
+      Appwrite.database.deleteDocument(
+        collectionId: Appwrite.dbCatsID,
+        documentId: docID!,
+      ),
+    ]);
+  }
+
+  Future<void> sellToMarket(UserInfo userInfo) async {
+    var multipartFile = await http.MultipartFile.fromPath('file', imagePath!,
+        filename: id + '.jpg');
+    await Appwrite.storage.createFile(
+      fileId: id,
+      file: multipartFile,
+      read: <String>['role:member'],
+      write: <String>['role:member'],
+    );
+
+    await Appwrite.database.createDocument(
+      collectionId: Appwrite.dbCatsID,
+      documentId: 'unique()',
+      data: <String, dynamic>{
+        'id': id,
+        'file': id,
+        'owner': userInfo.username,
+        'price': (price * (1 + Random().nextDouble() / 2)).round(),
+        'name': name,
+        'level': level,
+        'experience': experience,
+        'max_happiness': maxHappiness,
+        'max_fitness': maxFitness,
+        'preferences': jsonEncode(preferences),
+      },
+      read: <String>['role:member'],
+      write: <String>['role:member'],
+    );
+  }
+
+  Future<void> removeFromDatabase() async {
+    File(imagePath!).delete();
     return super.delete();
   }
 }

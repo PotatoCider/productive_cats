@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_config/flutter_config.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:productive_cats/models/cat.dart';
@@ -13,8 +14,9 @@ import 'package:productive_cats/pages/cat_box.dart';
 import 'package:productive_cats/pages/register.dart';
 import 'package:productive_cats/pages/settings.dart';
 import 'package:productive_cats/pages/app_usage.dart';
-import 'package:productive_cats/pages/trading.dart';
+import 'package:productive_cats/pages/market.dart';
 import 'package:productive_cats/providers/app_usages.dart';
+import 'package:productive_cats/providers/cat_market.dart';
 import 'package:productive_cats/providers/coins.dart';
 import 'package:productive_cats/providers/daily_updater.dart';
 import 'package:productive_cats/providers/user_info.dart';
@@ -31,11 +33,7 @@ void main() async {
   Hive.registerAdapter(CatAdapter());
 
   await Hive.initFlutter();
-  await Future.wait([
-    Cat.openBox(),
-    Hive.openBox<String>('settings'),
-  ]);
-
+  await Hive.openBox<String>('settings');
   runApp(const App());
 }
 
@@ -48,7 +46,7 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   final UserInfo user = UserInfo();
-  final Coins coins = Coins();
+  late final Coins coins = Coins(user);
   final AppUsages usages = AppUsages();
 
   @override
@@ -65,6 +63,13 @@ class _AppState extends State<App> {
     super.dispose();
   }
 
+  Widget _transitionBuilder(BuildContext context, Animation<double> animation,
+          Animation<double> _, Widget child) =>
+      FadeTransition(
+        opacity: animation,
+        child: child,
+      );
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -72,7 +77,9 @@ class _AppState extends State<App> {
         ChangeNotifierProvider.value(value: user),
         ChangeNotifierProvider.value(value: coins),
         ChangeNotifierProvider.value(value: usages),
-        ChangeNotifierProvider(create: (_) => DailyUpdater(usages, coins)),
+        ChangeNotifierProvider(
+            create: (_) => DailyUpdater(user, usages, coins)),
+        ChangeNotifierProvider(create: (_) => CatMarket()),
       ],
       child: ValueListenableBuilder<Box<String>>(
           valueListenable: Hive.box<String>('settings').listenable(),
@@ -103,7 +110,7 @@ class _AppState extends State<App> {
   }
 
   late final _router = GoRouter(
-    initialLocation: '/cats',
+    initialLocation: '/login',
     refreshListenable: user,
     redirect: (state) {
       if (user.loading) return null;
@@ -120,58 +127,98 @@ class _AppState extends State<App> {
     routes: [
       GoRoute(
         path: '/',
-        builder: (context, state) => const BuddyPage(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const CatCollectionPage(),
+          transitionsBuilder: _transitionBuilder,
+          transitionDuration: const Duration(milliseconds: 350),
+        ),
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginPage(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const LoginPage(),
+          transitionsBuilder: _transitionBuilder,
+          transitionDuration: const Duration(milliseconds: 350),
+        ),
       ),
       GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterPage(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const RegisterPage(),
+          transitionsBuilder: _transitionBuilder,
+          transitionDuration: const Duration(milliseconds: 350),
+        ),
       ),
-      GoRoute(
-        path: '/buddy',
-        builder: (context, state) => const BuddyPage(),
-      ),
+      // GoRoute(
+      //   path: '/buddy',
+      //   builder: (context, state) => const BuddyPage(),
+      // ),
       GoRoute(
         path: '/cats',
-        builder: (context, state) => const CatCollectionPage(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const CatCollectionPage(),
+          transitionsBuilder: _transitionBuilder,
+          transitionDuration: const Duration(milliseconds: 350),
+        ),
         routes: [
           GoRoute(
             path: ':index',
             pageBuilder: (context, state) => CustomTransitionPage(
               child: CatInfoPage(
-                int.parse(state.params['index']!),
+                Cat.catbox!.getAt(int.parse(state.params['index']!)),
               ),
-              transitionsBuilder: (context, animation, _, child) =>
-                  FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
+              transitionsBuilder: _transitionBuilder,
+              transitionDuration: const Duration(milliseconds: 350),
             ),
           ),
         ],
       ),
+      // GoRoute(
+      //   path: '/catbox',
+      //   builder: (context, state) => const CatBoxPage(),
+      // ),
       GoRoute(
-        path: '/catbox',
-        builder: (context, state) => const CatBoxPage(),
-      ),
-      GoRoute(
-        path: '/trading',
-        builder: (context, state) => const TradingPage(),
+        path: '/market',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const MarketPage(),
+          transitionsBuilder: _transitionBuilder,
+          transitionDuration: const Duration(milliseconds: 350),
+        ),
+        routes: [
+          GoRoute(
+            path: ':index',
+            pageBuilder: (context, state) {
+              var market = context.read<CatMarket>();
+              return CustomTransitionPage(
+                child: CatInfoPage(
+                  market.cats[int.parse(state.params['index']!)],
+                ),
+                transitionsBuilder: _transitionBuilder,
+                transitionDuration: const Duration(milliseconds: 350),
+              );
+            },
+          ),
+        ],
       ),
       GoRoute(
         path: '/usage',
-        builder: (context, state) => const AppUsagePage(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const AppUsagePage(),
+          transitionsBuilder: _transitionBuilder,
+          transitionDuration: const Duration(milliseconds: 350),
+        ),
       ),
-      GoRoute(
-        path: '/leaderboard',
-        builder: (context, state) => const LeaderboardPage(),
-      ),
+      // GoRoute(
+      //   path: '/leaderboard',
+      //   builder: (context, state) => const LeaderboardPage(),
+      // ),
       GoRoute(
         path: '/settings',
-        builder: (context, state) => const SettingsPage(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const SettingsPage(),
+          transitionsBuilder: _transitionBuilder,
+          transitionDuration: const Duration(milliseconds: 350),
+        ),
       ),
     ],
   );

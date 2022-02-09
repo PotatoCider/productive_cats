@@ -74,7 +74,7 @@ class _RegisterPageState extends State<RegisterPage> {
             'email': _email,
             'username': _username,
             'name': _name,
-            'coins': 100,
+            'coins': 0,
           },
         );
         Utils.showSnackBar(context, 'Register successful');
@@ -205,7 +205,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           children: [
                             PaddedButton(
                               child: const Text('OLD USER?'),
-                              onPressed: () => context.go('/login'),
+                              onPressed: () => context.push('/login'),
                             ),
                             GoogleButton(
                               'SIGN UP',

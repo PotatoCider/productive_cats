@@ -8,14 +8,13 @@ class Utils {
           r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
       .hasMatch(email);
 
-  static void showSnackBar(BuildContext context, String text) =>
-      WidgetsBinding.instance!.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-          content: Text(text),
-        ));
-      });
+  static void showSnackBar(BuildContext context, String text) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+      content: Text(text),
+    ));
+  }
 
   static String capsFirst(String text) => text.isEmpty
       ? ''

@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:productive_cats/widgets/hero_material.dart';
 
@@ -9,12 +10,14 @@ class FormatText extends StatelessWidget {
     this.bold = false,
     this.size,
     this.padding = EdgeInsets.zero,
-    this.hero = false,
+    bool hero = false,
     this.heroTag,
     this.center = false,
     this.shadow = false,
+    this.softWrap = true,
     Key? key,
-  }) : super(key: key);
+  })  : isHero = heroTag != null || hero,
+        super(key: key);
 
   final String text;
   final Color? color;
@@ -23,17 +26,18 @@ class FormatText extends StatelessWidget {
   final double? size;
   final bool center;
   final EdgeInsetsGeometry padding;
-  final bool hero;
+  final bool isHero;
   final String? heroTag;
   final bool shadow;
+  final bool softWrap;
 
   @override
   Widget build(BuildContext context) {
-    Widget widget = Text(
+    Widget widget = AutoSizeText(
       text,
       // softWrap: false prevents text from cutting during hero transition
       // see https://github.com/flutter/flutter/issues/10246
-      softWrap: !hero,
+      softWrap: !isHero && softWrap,
       style: TextStyle(
         color: color,
         fontWeight: weight ?? (bold ? FontWeight.bold : null),
@@ -56,7 +60,7 @@ class FormatText extends StatelessWidget {
     if (padding != EdgeInsets.zero) {
       widget = Padding(padding: padding, child: widget);
     }
-    if (hero) {
+    if (isHero) {
       widget = HeroMaterial(tag: heroTag ?? text, child: widget);
     }
     return widget;

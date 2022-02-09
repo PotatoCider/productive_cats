@@ -127,7 +127,7 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           PaddedButton(
-                            onPressed: () => context.go('/register'),
+                            onPressed: () => context.push('/register'),
                             child: const Text('NEW USER?'),
                           ),
                           GoogleButton(

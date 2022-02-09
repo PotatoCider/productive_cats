@@ -21,7 +21,7 @@ class BuddyPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(64),
         child: ValueListenableBuilder(
-          valueListenable: Cat.catbox.listenable(),
+          valueListenable: Cat.catbox!.listenable(),
           builder: (context, box, child) => Column(
             children: [
               const Text(

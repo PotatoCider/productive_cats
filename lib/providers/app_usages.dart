@@ -5,13 +5,14 @@ import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:productive_cats/utils/utils.dart';
+import 'package:usage_stats/usage_stats.dart';
 
 class AppUsages with ChangeNotifier {
   AppUsages() {
     var n = DateTime.now();
     yesterday = AppUsagePeriod(
-      start: DateTime(n.year, n.month, n.day - 1),
-      end: DateTime(n.year, n.month, n.day),
+      start: DateTime(n.year, n.month, n.day - 2),
+      end: DateTime(n.year, n.month, n.day - 1),
       periodText: 'yesterday',
     );
     lastMonth = AppUsagePeriod(
@@ -71,7 +72,7 @@ class AppUsagePeriod with ChangeNotifier {
       var now = DateTime.now();
       var isDiffYear = end.year != now.year || start.year != now.year;
       var fmt = isDiffYear ? DateFormat.yMMMd() : DateFormat.MMMd();
-      var startFmt = periodText =
+      periodText =
           'from ${fmt.format(start) + (isDiffYear ? '\n' : ' ')}to ${fmt.format(end)}';
     }
     text = periodText;
@@ -93,7 +94,6 @@ class AppUsagePeriod with ChangeNotifier {
     fetched = false;
     var infos = await AppUsage.getAppUsage(start, end);
     if (infos.isEmpty) return false;
-
     totalDuration = const Duration();
     for (var info in infos) {
       var name = info.packageName;

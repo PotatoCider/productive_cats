@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:productive_cats/providers/coins.dart';
+import 'package:productive_cats/widgets/format_text.dart';
+import 'package:productive_cats/widgets/hero_material.dart';
 import 'package:provider/provider.dart';
 
 class TitleWithCoinDisplay extends StatelessWidget {
@@ -28,17 +30,25 @@ class CoinDisplay extends StatelessWidget {
   const CoinDisplay({
     this.scale = 1,
     this.additional,
+    this.margin,
+    this.value,
+    this.checkAfford = false,
     Key? key,
-  }) : super(key: key);
+  })  : assert(!checkAfford || value != null),
+        super(key: key);
 
   final double scale;
+  final double? value;
+  final bool checkAfford;
   final List<Widget>? additional;
+  final EdgeInsetsGeometry? margin;
 
   @override
   Widget build(BuildContext context) {
     var size = Theme.of(context).textTheme.headline6?.fontSize ?? 14;
     size *= scale;
-    return Card(
+    Widget widget = Card(
+      margin: margin,
       color: Theme.of(context).backgroundColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16 * scale),
@@ -55,24 +65,26 @@ class CoinDisplay extends StatelessWidget {
               ),
               height: size,
             ),
-            SizedBox(width: 8 * scale),
-            Row(
-              children: [
-                Consumer<Coins>(
-                  builder: (context, coins, child) => Text(
-                    coins.coinsInt.toString(),
-                    style: TextStyle(
-                      fontSize: size,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+            SizedBox(width: 4 * scale),
+            Flexible(
+              child: Consumer<Coins>(
+                builder: (context, coins, child) => FormatText(
+                  value?.round().toString() ?? coins.coinsInt.toString(),
+                  size: size,
+                  bold: true,
+                  color:
+                      checkAfford && coins.coins < value! ? Colors.red : null,
                 ),
-                ...?additional,
-              ],
+              ),
             ),
+            ...?additional?.map((widget) => Flexible(child: widget)),
           ],
         ),
       ),
     );
+    if (value == null) {
+      widget = HeroMaterial(tag: 'coin_display', child: widget);
+    }
+    return widget;
   }
 }

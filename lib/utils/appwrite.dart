@@ -20,4 +20,6 @@ class Appwrite {
 
   static String get dbUsersID =>
       FlutterConfig.get('APPWRITE_DB_USERS').toString();
+  static String get dbCatsID =>
+      FlutterConfig.get('APPWRITE_DB_CATS').toString();
 }

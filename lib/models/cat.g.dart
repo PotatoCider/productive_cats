@@ -20,11 +20,12 @@ class CatAdapter extends TypeAdapter<Cat> {
       id: fields[0] as String,
       maxHappiness: fields[1] as int,
       maxFitness: fields[2] as int,
-      imagePath: fields[3] as String,
+      imagePath: fields[3] as String?,
       name: fields[4] as String,
       level: fields[7] == null ? 1 : fields[7] as int,
       experience: fields[8] == null ? 0 : fields[8] as double,
       preferences: (fields[9] as Map).cast<String, double>(),
+      todayExp: fields[10] == null ? 0 : fields[10] as double,
     )
       ..happiness = fields[5] as double
       ..fitness = fields[6] as double;
@@ -33,7 +34,7 @@ class CatAdapter extends TypeAdapter<Cat> {
   @override
   void write(BinaryWriter writer, Cat obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +54,9 @@ class CatAdapter extends TypeAdapter<Cat> {
       ..writeByte(8)
       ..write(obj.experience)
       ..writeByte(9)
-      ..write(obj.preferences);
+      ..write(obj.preferences)
+      ..writeByte(10)
+      ..write(obj.todayExp);
   }
 
   @override

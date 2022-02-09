@@ -102,20 +102,27 @@ class _CatCollectionPageState extends State<CatCollectionPage> {
       drawer: const NavigationDrawer(DrawerItems.collection),
       floatingActionButton: InkWell(
         splashColor: Colors.blue,
-        onLongPress: () => context.read<DailyUpdater>().update(true),
+        onLongPress: () {
+          var box = Hive.box<String>('settings');
+          if (box.get('dev_mode') == '1') {
+            var days = int.tryParse(box.get('time_travel') ?? '1');
+            context.read<DailyUpdater>().update(true, days ?? 1);
+          }
+        },
         child: FloatingActionButton(
           onPressed: generating ? () {} : () => _showBuyDialog(context),
-          child: const Icon(Icons.add),
+          child: generating
+              ? const CircularProgressIndicator()
+              : const Icon(Icons.add),
         ),
       ),
       body: ValueListenableBuilder<Box<Cat>>(
-        valueListenable: Cat.catbox.listenable(),
+        valueListenable: Cat.catbox!.listenable(),
         builder: (context, box, child) {
           return GridView.count(
-            addAutomaticKeepAlives: false,
             controller: _scrollController,
-            crossAxisCount: 2,
             padding: const EdgeInsets.all(16),
+            crossAxisCount: 2,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
             childAspectRatio: 0.76,
@@ -136,68 +143,61 @@ class CatGridItem extends StatelessWidget {
   const CatGridItem(this.index, {Key? key}) : super(key: key);
 
   final int index;
-
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Box<Cat>>(
-        valueListenable: Cat.catbox.listenable(),
-        builder: (context, box, child) {
-          if (index == -1) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          var cat = box.getAt(index)!;
-          return Material(
-            child: Ink(
-              child: InkWell(
-                // onLongPress: cat.delete,
-                onTap: () => context.go('/cats/$index'),
-                borderRadius: BorderRadius.circular(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    if (index == -1) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    var cat = Cat.catbox!.getAt(index)!;
+    return Material(
+      child: Ink(
+        child: InkWell(
+          // onLongPress: cat.delete,
+          onTap: () => context.push('/cats/$index'),
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FormatText(
+                cat.name,
+                weight: FontWeight.bold,
+                heroTag: cat.id + '_name',
+              ),
+              const SizedBox(height: 8),
+              Hero(
+                tag: cat.id + '_image',
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      image: DecorationImage(
+                          image: FileImage(File(cat.imagePath!))),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              HeroMaterial(
+                tag: cat.id + '_level',
+                child: Row(
                   children: [
                     FormatText(
-                      cat.name,
+                      'LVL ${cat.level}',
                       weight: FontWeight.bold,
-                      hero: true,
                     ),
-                    const SizedBox(height: 8),
-                    Hero(
-                      tag: cat.imagePath,
-                      child: AspectRatio(
-                        aspectRatio: 1,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            image: DecorationImage(
-                                image: FileImage(File(cat.imagePath))),
-                          ),
-                        ),
-                      ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: PercentageBar(cat.experience / cat.maxExperience),
                     ),
-                    const SizedBox(height: 8),
-                    HeroMaterial(
-                      tag: cat.id + '_level',
-                      child: Row(
-                        children: [
-                          FormatText(
-                            'LVL ${cat.level}',
-                            weight: FontWeight.bold,
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: PercentageBar(
-                                cat.experience / cat.maxExperience),
-                          ),
-                          const SizedBox(width: 4),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(width: 4),
                   ],
                 ),
               ),
-            ),
-          );
-        });
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
-// TODO: store locally using sqlfite

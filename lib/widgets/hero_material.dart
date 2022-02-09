@@ -18,7 +18,7 @@ class HeroMaterial extends StatelessWidget {
     return Hero(
       tag: tag,
       child: Material(
-        color: Colors.transparent,
+        type: MaterialType.transparency,
         child: child,
       ),
     );

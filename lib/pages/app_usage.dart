@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:app_usage/app_usage.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -9,9 +10,11 @@ import 'package:productive_cats/providers/daily_updater.dart';
 import 'package:productive_cats/utils/utils.dart';
 import 'package:productive_cats/widgets/bottom_nav_bar.dart';
 import 'package:productive_cats/widgets/coin_display.dart';
+import 'package:productive_cats/widgets/format_text.dart';
 import 'package:productive_cats/widgets/nav_drawer.dart';
 import 'package:productive_cats/widgets/percentage_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:usage_stats/usage_stats.dart';
 
 class AppUsagePage extends StatefulWidget {
   const AppUsagePage({Key? key}) : super(key: key);
@@ -33,6 +36,25 @@ class _AppUsagePageState extends State<AppUsagePage>
   }
 
   void init() async {
+    if (!(await UsageStats.checkUsagePermission() ?? false)) {
+      showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("My title"),
+            content: const Text("This is my message."),
+            actions: [
+              TextButton(
+                  onPressed: () async {
+                    UsageStats.grantUsagePermission();
+                    Utils.log('after');
+                  },
+                  child: const Text('OK')),
+            ],
+          );
+        },
+      );
+    }
     if (!usages.fetched) await usages.fetch();
     context.read<DailyUpdater>().update().then((updated) {
       if (updated) Utils.log('updated');
@@ -60,8 +82,8 @@ class _AppUsagePageState extends State<AppUsagePage>
       context: context,
       initialDate: usages.selected.start,
       helpText: 'Pick a start date',
-      firstDate: DateTime(2015, 8),
-      lastDate: DateTime(2101),
+      firstDate: DateTime(2010),
+      lastDate: DateTime.now(),
     );
     if (picked == null) return;
     start = picked;
@@ -69,11 +91,17 @@ class _AppUsagePageState extends State<AppUsagePage>
       context: context,
       initialDate: usages.selected.end,
       helpText: 'Pick an end date',
-      firstDate: DateTime(2015, 8),
-      lastDate: DateTime(2101),
+      firstDate: start,
+      lastDate: DateTime.now(),
     );
     if (picked == null) return;
     end = picked;
+    if (start.year == end.year &&
+        start.month == end.month &&
+        start.day == end.day) {
+      Utils.showSnackBar(context, 'Please pick 2 different dates');
+      return;
+    }
 
     usages.selected = AppUsagePeriod(start: start, end: end);
   }
@@ -85,7 +113,7 @@ class _AppUsagePageState extends State<AppUsagePage>
       drawer: const NavigationDrawer(DrawerItems.usage),
       floatingActionButton: FloatingActionButton(
         onPressed: _selectPeriod,
-        child: const Icon(Icons.edit_calendar),
+        child: const Icon(Icons.calendar_today),
       ),
       body: const CustomScrollView(
         slivers: [
@@ -177,8 +205,8 @@ class AppUsageSpaceBar extends StatelessWidget {
       usages.lastMonth,
       usages.lastYear
     ];
-    if (usages.selected.custom) dropdown.add(null);
-
+    if (sel.custom) dropdown.add(null);
+    var isNeg = usages.yesterday.offlineDuration.isNegative;
     return FlexibleSpaceBar(
       title: Row(
         children: [
@@ -186,7 +214,7 @@ class AppUsageSpaceBar extends StatelessWidget {
           const SizedBox(width: 8),
           DropdownButton(
             iconSize: 18,
-            value: usages.selected.custom ? null : usages.selected,
+            value: sel.custom ? null : sel,
             items: dropdown
                 .map((period) => DropdownMenuItem(
                       child: Text(
@@ -209,24 +237,17 @@ class AppUsageSpaceBar extends StatelessWidget {
             scale: 1.5,
             additional: [
               if (usages.fetched)
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: ' +${usages.yesterday.offlineDuration.inHours}',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const TextSpan(text: '/day')
-                    ],
-                  ),
+                FormatText(
+                  ' ${isNeg ? '0' : '+' + (usages.yesterday.offlineDuration.inMinutes / 60.0).round().toString()}',
+                  size: 20,
+                  color: isNeg ? null : Colors.green,
+                  bold: !isNeg,
+                  // softWrap: false,
                 ),
+              const FormatText('/day'),
             ],
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 32),
           if (usages.fetched)
             RichText(
               text: TextSpan(children: [

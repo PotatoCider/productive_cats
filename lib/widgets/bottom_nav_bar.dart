@@ -23,20 +23,20 @@ class BottomNavBar extends StatelessWidget {
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.compare_arrows),
-          label: 'Trading',
+          label: 'Market',
         ),
       ],
       currentIndex: index,
       onTap: (index) {
         switch (index) {
           case 0:
-            context.go('/usage');
+            context.push('/usage');
             break;
           case 1:
-            context.go('/cats');
+            context.push('/cats');
             break;
           case 2:
-            context.go('/trading');
+            context.push('/market');
             break;
         }
       },
