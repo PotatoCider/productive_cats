@@ -2,12 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:productive_cats/models/cat.dart';
-import 'package:productive_cats/providers/app_usages.dart';
 import 'package:productive_cats/providers/coins.dart';
 import 'package:productive_cats/providers/daily_updater.dart';
+import 'package:productive_cats/utils/settings.dart';
 import 'package:productive_cats/utils/utils.dart';
 import 'package:productive_cats/widgets/bottom_nav_bar.dart';
 import 'package:productive_cats/widgets/hero_material.dart';
@@ -52,6 +51,10 @@ class _CatCollectionPageState extends State<CatCollectionPage> {
         title: const Text('Buy Cat for 100 coins?'),
         content: RichText(
           text: TextSpan(
+            style: TextStyle(
+                color: Settings.box.get('dark_mode') == '1'
+                    ? Colors.white
+                    : Colors.black),
             children: [
               const TextSpan(
                   text: 'Are you sure you want to buy a random cat\nfor 100 '),

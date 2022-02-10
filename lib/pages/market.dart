@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:productive_cats/models/cat.dart';
 import 'package:productive_cats/providers/cat_market.dart';
-import 'package:productive_cats/utils/appwrite.dart';
-import 'package:productive_cats/utils/utils.dart';
 import 'package:productive_cats/widgets/bottom_nav_bar.dart';
 import 'package:productive_cats/widgets/coin_display.dart';
 import 'package:productive_cats/widgets/format_text.dart';
 import 'package:productive_cats/widgets/hero_material.dart';
 import 'package:productive_cats/widgets/nav_drawer.dart';
-import 'package:productive_cats/widgets/percentage_bar.dart';
 import 'package:provider/provider.dart';
 
 class MarketPage extends StatefulWidget {
@@ -26,6 +22,7 @@ class _MarketPageState extends State<MarketPage> {
     super.initState();
     catMarket = context.read<CatMarket>();
     if (!catMarket.fetched) catMarket.fetch();
+    catMarket.subscribe();
   }
 
   @override

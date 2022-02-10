@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:productive_cats/models/cat.dart';
-import 'package:productive_cats/providers/coins.dart';
-import 'package:productive_cats/providers/user_info.dart';
 import 'package:productive_cats/widgets/nav_drawer.dart';
 import 'package:productive_cats/widgets/coin_display.dart';
-import 'package:provider/provider.dart';
 
 class BuddyPage extends StatelessWidget {
   const BuddyPage({Key? key}) : super(key: key);

@@ -2,12 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:productive_cats/models/cat.dart';
 import 'package:productive_cats/providers/coins.dart';
 import 'package:productive_cats/providers/user_info.dart';
+import 'package:productive_cats/utils/settings.dart';
 import 'package:productive_cats/utils/utils.dart';
-import 'package:productive_cats/widgets/coin_display.dart';
 import 'package:productive_cats/widgets/hero_material.dart';
 import 'package:productive_cats/widgets/login_buttons.dart';
 import 'package:productive_cats/widgets/percentage_bar.dart';
@@ -35,6 +34,10 @@ class CatInfoPage extends StatelessWidget {
         title: Text('${buy ? 'Buy' : 'Sell'} ${cat.name}?'),
         content: RichText(
           text: TextSpan(
+            style: TextStyle(
+                color: Settings.box.get('dark_mode') == '1'
+                    ? Colors.white
+                    : Colors.black),
             children: [
               TextSpan(
                   text:

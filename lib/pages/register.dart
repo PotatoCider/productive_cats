@@ -1,5 +1,4 @@
 import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -8,9 +7,7 @@ import 'package:productive_cats/utils/appwrite.dart';
 import 'package:productive_cats/widgets/format_text.dart';
 import 'package:productive_cats/widgets/hero_material.dart';
 import 'package:productive_cats/widgets/login_buttons.dart';
-import 'package:productive_cats/widgets/nav_drawer.dart';
 import 'package:productive_cats/utils/utils.dart';
-import 'package:productive_cats/widgets/heading.dart';
 import 'package:productive_cats/widgets/login_field.dart';
 import 'package:provider/provider.dart';
 

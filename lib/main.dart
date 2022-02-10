@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_config/flutter_config.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:productive_cats/models/cat.dart';
-import 'package:productive_cats/pages/buddy.dart';
 import 'package:productive_cats/pages/cat_collection.dart';
 import 'package:productive_cats/pages/cat_info.dart';
-import 'package:productive_cats/pages/leaderboard.dart';
 
 import 'package:productive_cats/pages/login.dart';
-import 'package:productive_cats/pages/cat_box.dart';
 import 'package:productive_cats/pages/register.dart';
 import 'package:productive_cats/pages/settings.dart';
 import 'package:productive_cats/pages/app_usage.dart';

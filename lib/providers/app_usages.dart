@@ -1,18 +1,14 @@
-import 'dart:convert';
-
 import 'package:app_usage/app_usage.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:productive_cats/utils/utils.dart';
-import 'package:usage_stats/usage_stats.dart';
 
 class AppUsages with ChangeNotifier {
   AppUsages() {
     var n = DateTime.now();
     yesterday = AppUsagePeriod(
-      start: DateTime(n.year, n.month, n.day - 2),
-      end: DateTime(n.year, n.month, n.day - 1),
+      start: DateTime(n.year, n.month, n.day - 1),
+      end: DateTime(n.year, n.month, n.day),
       periodText: 'yesterday',
     );
     lastMonth = AppUsagePeriod(

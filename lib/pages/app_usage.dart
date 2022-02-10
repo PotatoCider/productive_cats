@@ -1,10 +1,5 @@
-import 'dart:ui';
-
-import 'package:app_usage/app_usage.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:productive_cats/providers/app_usages.dart';
 import 'package:productive_cats/providers/daily_updater.dart';
 import 'package:productive_cats/utils/utils.dart';
@@ -41,24 +36,26 @@ class _AppUsagePageState extends State<AppUsagePage>
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text("My title"),
-            content: const Text("This is my message."),
+            title: const Text('Allow App Usage Permission'),
+            content: const Text(
+                'In order to use app usages, please allow Productive Cats to get your application usage.'),
             actions: [
               TextButton(
                   onPressed: () async {
-                    UsageStats.grantUsagePermission();
-                    Utils.log('after');
+                    Navigator.of(context).pop();
+                    await UsageStats.grantUsagePermission();
                   },
                   child: const Text('OK')),
             ],
           );
         },
       );
+    } else {
+      if (!usages.fetched) await usages.fetch();
+      context.read<DailyUpdater>().update().then((updated) {
+        if (updated) Utils.log('updated');
+      });
     }
-    if (!usages.fetched) await usages.fetch();
-    context.read<DailyUpdater>().update().then((updated) {
-      if (updated) Utils.log('updated');
-    });
   }
 
   @override
@@ -70,7 +67,7 @@ class _AppUsagePageState extends State<AppUsagePage>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      usages.fetch();
+      init();
     }
   }
 

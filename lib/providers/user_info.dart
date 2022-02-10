@@ -22,7 +22,7 @@ class UserInfo with ChangeNotifier {
   Box<String>? get box => user == null ? null : Hive.box('user_${user!.$id}');
 
   bool get loggedIn => user != null && user!.passwordUpdate != 0;
-  bool get registerGoogle => user != null && username == null;
+  bool get registerGoogle => user != null && user!.passwordUpdate == 0;
   bool get timedOut =>
       error?.message != null && error!.message!.contains('SocketException');
 

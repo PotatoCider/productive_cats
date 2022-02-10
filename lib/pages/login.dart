@@ -7,9 +7,7 @@ import 'package:productive_cats/utils/appwrite.dart';
 import 'package:productive_cats/widgets/format_text.dart';
 import 'package:productive_cats/widgets/hero_material.dart';
 import 'package:productive_cats/widgets/login_buttons.dart';
-import 'package:productive_cats/widgets/nav_drawer.dart';
 import 'package:productive_cats/utils/utils.dart';
-import 'package:productive_cats/widgets/heading.dart';
 import 'package:productive_cats/widgets/login_field.dart';
 import 'package:provider/provider.dart';
 
@@ -64,6 +62,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    var user = context.watch<UserInfo>();
     return Scaffold(
       appBar: AppBar(
         leading: const SizedBox.shrink(),
@@ -88,7 +87,10 @@ class _LoginPageState extends State<LoginPage> {
                   width: 160,
                   color: Theme.of(context).primaryColor,
                 ),
-                const SizedBox(height: 24),
+                if (user.loading)
+                  const CircularProgressIndicator()
+                else
+                  const SizedBox(height: 24),
                 LoginFormField(
                   'Email', // TODO: allow username login too
                   validator: (value) {

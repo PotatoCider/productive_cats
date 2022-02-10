@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:productive_cats/models/cat.dart';
-import 'package:productive_cats/providers/app_usages.dart';
 import 'package:productive_cats/providers/coins.dart';
 import 'package:productive_cats/providers/user_info.dart';
 import 'package:productive_cats/utils/utils.dart';

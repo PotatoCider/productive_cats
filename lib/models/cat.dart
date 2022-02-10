@@ -4,7 +4,6 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:device_apps/device_apps.dart';
-import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:productive_cats/providers/user_info.dart';
@@ -12,7 +11,6 @@ import 'package:productive_cats/utils/appwrite.dart';
 import 'package:productive_cats/utils/cat_names.dart';
 import 'package:productive_cats/providers/app_usages.dart';
 import 'package:productive_cats/utils/utils.dart';
-import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 

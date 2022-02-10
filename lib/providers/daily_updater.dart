@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:productive_cats/models/cat.dart';
 import 'package:productive_cats/providers/app_usages.dart';
 import 'package:productive_cats/providers/coins.dart';
@@ -30,9 +29,9 @@ class DailyUpdater extends ChangeNotifier {
   // updates
   Future<bool> update([bool force = false, int days = 1]) async {
     var now = DateTime.now();
-    var lastMidnight = DateTime(now.year, now.month, now.day - 1);
+    var lastMidnight = DateTime(now.year, now.month, now.day);
     if (force || lastUpdated == null) {
-      _lastUpdated = DateTime(now.year, now.month, now.day - 1 - days);
+      _lastUpdated = DateTime(now.year, now.month, now.day - days);
     }
     if (!force && !lastUpdated!.isBefore(lastMidnight)) return false;
     Utils.log('updating');
