@@ -41,6 +41,7 @@ class DailyUpdater extends ChangeNotifier {
     var ok = await period.fetch();
     if (!ok) return false;
     await _usages.fetchApps(period);
+    Utils.log(_usages.apps);
 
     _coins.coins += period.offlineDuration.inSeconds / 3600.0;
 
@@ -48,7 +49,9 @@ class DailyUpdater extends ChangeNotifier {
 
     // update cats exp
     for (var cat in Cat.catbox!.values) {
-      cat.consumeDailyUsage(period, _usages.apps);
+      for (int i = 0; i < days; i++) {
+        cat.consumeDailyUsage(period, _usages.apps);
+      }
     }
     return true;
   }
