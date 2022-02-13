@@ -1,6 +1,7 @@
 # productive_cats
 
 GitHub: https://github.com/gohjoseph/productive_cats
+
 An app designed to keep your productive with collectible cats.
 
 ## Getting Started
