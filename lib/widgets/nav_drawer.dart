@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:productive_cats/providers/user_info.dart';
 import 'package:productive_cats/widgets/format_text.dart';
+import 'package:provider/provider.dart';
 
 enum DrawerItems {
   none,
@@ -57,6 +59,20 @@ class NavigationDrawer extends StatelessWidget {
                       const FormatText(
                         'Productive Cats',
                         bold: true,
+                      ),
+                      Positioned(
+                        top: 117,
+                        child: Row(
+                          children: [
+                            const FormatText(
+                              'Logined as ',
+                            ),
+                            FormatText(
+                              '${context.watch<UserInfo>().username}',
+                              bold: true,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

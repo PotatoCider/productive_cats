@@ -183,7 +183,8 @@ class Cat extends HiveObject {
     // *present* categories listed in the current period.
     var activeCategories =
         period.durations.keys // all app with usage from yesterday
-            .map((name) => apps[name]!.category.name) // get app category
+            .map((name) => apps[name]?.category.name) // get app category
+            .whereType<String>()
             .toSet();
     var totalp = activeCategories
         .map((cat) => preferences[cat]!)
@@ -196,7 +197,7 @@ class Cat extends HiveObject {
     // then we take the weighted sum
     var rsum = 0.0;
     for (var name in period.appNamesByUsage) {
-      var cat = apps[name]!.category.name;
+      var cat = apps[name]?.category.name;
       if (!preferences.containsKey(cat)) continue;
 
       // ratio of app usage
