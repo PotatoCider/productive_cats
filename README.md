@@ -11,7 +11,7 @@ Demo: https://www.youtube.com/watch?v=mvqg0_AQmoc
 
 GitHub: https://github.com/PotatoCider/productive_cats
 
-An app designed to keep your productive with collectible cats.
+An android app designed to keep you productive with with collectible cats.
 
 ## Getting Started
 1. Install [Flutter](https://docs.flutter.dev/get-started/install) and Flutter/Dart Plugins in your IDE
